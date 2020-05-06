@@ -37,6 +37,10 @@ public class LedgerPartition {
         return true;
     }
 
+    public int getSize(){
+        return blocks.size();
+    }
+
 
 
 }
