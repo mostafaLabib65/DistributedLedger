@@ -36,7 +36,9 @@ public class TransactionsValidator {
                 hashAndIndex.add(index);
 
                 byte[] keyBytes = BytesConverter.concatenateByteArrays(hashAndIndex);
-                String hashString = BytesConverter.byteToHexString(keyBytes,64);
+
+
+                String hashString = BytesConverter.byteToHexString(SHA.getSHA(keyBytes),64);
 
 
                 if( !utxoSet.contains(hashString))
@@ -67,12 +69,10 @@ public class TransactionsValidator {
                                                  byte[] transactionHash) throws NoSuchAlgorithmException {
 
         byte[] publicKeyByteRepresentation = input.getPublicKeyByteRepresentation();
-
-
-        if(!(
-                BytesConverter.byteToHexString(outputReferenced.publicKeyHash, 64).equals(
-                        BytesConverter.byteToHexString(SHA.getSHA(publicKeyByteRepresentation),64)
-                ))) return false;
+        String referencedPublicKeyHash= BytesConverter.byteToHexString(outputReferenced.publicKeyHash, 64);
+        String givenPublicKeyRepresentation = BytesConverter.byteToHexString(SHA.getSHA(publicKeyByteRepresentation),64);
+        if(!(referencedPublicKeyHash.equals(givenPublicKeyRepresentation)))
+            return false;
 
         String transactionHashString = BytesConverter.byteToHexString(transactionHash, 64);
 

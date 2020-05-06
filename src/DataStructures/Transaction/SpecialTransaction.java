@@ -2,8 +2,9 @@ package DataStructures.Transaction;
 
 public class SpecialTransaction extends Transaction {
 
-    public SpecialTransaction(int inputCount, int outputCount) {
-        super(inputCount, outputCount);
+
+    public SpecialTransaction(int outputCount) {
+        super(0, outputCount);
     }
 
     @Override

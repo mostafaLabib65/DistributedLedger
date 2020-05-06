@@ -13,6 +13,8 @@ public class RSA {
     private BigInteger modulus;
 
 
+
+
     public static BigInteger encrypt(BigInteger message, BigInteger key, BigInteger modulus) {
         return message.modPow(key, modulus);
     }
@@ -32,6 +34,13 @@ public class RSA {
         privateKey = publicKey.modInverse(phi);
     }
 
+    public BigInteger getModulus() {
+        return modulus;
+    }
+
+    public BigInteger getPublicKey() {
+        return publicKey;
+    }
 
     public BigInteger encrypt(BigInteger message) {
         return message.modPow(publicKey, modulus);

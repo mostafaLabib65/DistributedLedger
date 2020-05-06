@@ -68,8 +68,6 @@ public abstract class Transaction {
         TransactionInput i4 =  new TransactionInput();
         TransactionInput i5 =  new TransactionInput();
 
-
-
         i1.publicKey = BigInteger.probablePrime(256, new SecureRandom());
         i1.publicKeyModulus = BigInteger.probablePrime(256, new SecureRandom());
         i1.signature = BigInteger.probablePrime(256, new SecureRandom());
