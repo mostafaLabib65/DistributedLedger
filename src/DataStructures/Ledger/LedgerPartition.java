@@ -29,10 +29,12 @@ public class LedgerPartition {
 
 
     public boolean addBlock(Block b) throws NoSuchAlgorithmException {
-        if(!(
-                BytesConverter.byteToHexString(b.getPreviousHash(), 64).equals(
-                BytesConverter.byteToHexString(blocks.get(blocks.size() - 1).getPreviousHash(), 64)
-        ))) return false;
+
+        if(!blocks.isEmpty())
+            if(!(
+                    BytesConverter.byteToHexString(b.getPreviousHash(), 64).equals(
+                    BytesConverter.byteToHexString(blocks.get(blocks.size() - 1).getPreviousHash(), 64)
+            ))) return false;
 
         if(!b.isValidPOWBlock(currentDifficulty, utxoSet)) return false;
 
@@ -40,9 +42,6 @@ public class LedgerPartition {
         b.addTransactionsToUTXOSet(utxoSet, startingLedgerIndex + blocks.size());
         ArrayList<String> usedUTXOs = b.getUsedUTXOs();
         for (int i = 0; i < usedUTXOs.size(); i++) {
-
-            //TODO ORDER IS IMPORTANT!!
-
             utxoSet.removeUTXOEntry(usedUTXOs.get(i));
         }
 
