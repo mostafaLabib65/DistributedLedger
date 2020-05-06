@@ -27,7 +27,11 @@ public class LedgerPartition {
         b.addTransactionsToUTXOSet(utxoSet, startingLedgerIndex + blocks.size());
         ArrayList<String> usedUTXOs = b.getUsedUTXOs();
         for (int i = 0; i < usedUTXOs.size(); i++) {
-            utxoSet.remove(usedUTXOs.get(i));
+
+            //TODO ORDER IS IMPORTANT!!
+
+            utxoSet.removeUTXOToPublicKey(usedUTXOs.get(i));
+            utxoSet.removeUTXOEntry(usedUTXOs.get(i));
         }
 
         return true;

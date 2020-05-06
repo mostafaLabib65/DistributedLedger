@@ -58,12 +58,16 @@ public class Block {
                 String key = BytesConverter.byteToHexString(SHA.getSHA(keyBytes),64);
 
                 UTXOEntry entry = new UTXOEntry();
-
                 entry.transaction = this.transactions[i];
                 entry.blockIndex = blockIndex;
                 entry.transactionIndex = i;
+                entry.transactionOutput = this.transactions[i].transactionOutputs[j];
 
-                utxoSet.add(key, entry);
+                utxoSet.addUTXOEntry(key, entry);
+                utxoSet.addUTXOToPubicKey(
+                        BytesConverter.byteToHexString(entry.transactionOutput.publicKeyHash, 64), entry);
+
+
 
             }
 
