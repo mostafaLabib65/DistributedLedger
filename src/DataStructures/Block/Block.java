@@ -15,8 +15,16 @@ import java.util.ArrayList;
 
 public class Block {
 
-    public BlockHeader header;
-    public Transaction[] transactions;
+    private BlockHeader header;
+    private Transaction[] transactions;
+
+    public Block(int N) {
+        transactions = new Transaction[N];
+    }
+
+    public void setHashOfPreviousBlock(byte[] hash) {
+        header.hashOfPrevBlock = hash;
+    }
 
     public void setMerkleTree() {
         //TODO !!!
@@ -64,8 +72,6 @@ public class Block {
                 entry.transactionOutput = this.transactions[i].transactionOutputs[j];
 
                 utxoSet.addUTXOEntry(key, entry);
-                utxoSet.addUTXOToPubicKey(
-                        BytesConverter.byteToHexString(entry.transactionOutput.publicKeyHash, 64), entry);
 
 
 

@@ -16,7 +16,9 @@ public class TransactionsValidator {
 
         HashSet<String> usedUTXOs = new HashSet<>();
         long sum;
+
         //TODO -ve amount
+
         for (int i = 0; i < transactions.length; i++) {
             sum = 0;
             for (int j = 0; j < transactions[i].getTransactionOutputs().length; j++) {

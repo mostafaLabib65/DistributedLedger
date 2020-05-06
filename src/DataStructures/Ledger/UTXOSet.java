@@ -28,27 +28,26 @@ public class UTXOSet {
     }
 
     public void addUTXOEntry(String key, UTXOEntry entry) {
+
         transactionHashToBlockAndTxIndex.put(key, entry);
-    }
-    public void removeUTXOEntry(String hash) {
-        transactionHashToBlockAndTxIndex.remove(hash);
-    }
-
-
-
-    public void addUTXOToPubicKey(String publicKeyHash, UTXOEntry utxoEntry) {
+        String publicKeyHash = BytesConverter.byteToHexString(entry.transactionOutput.publicKeyHash, 64);
         if(!availableUTXOsForPublicKey.containsKey(publicKeyHash))
             availableUTXOsForPublicKey.put(publicKeyHash, new ArrayList<>());
-        availableUTXOsForPublicKey.get(publicKeyHash).add(utxoEntry);
+        availableUTXOsForPublicKey.get(publicKeyHash).add(entry);
+
     }
-    public void removeUTXOToPublicKey(String hash){
+    public void removeUTXOEntry(String hash) {
+
         UTXOEntry entry = transactionHashToBlockAndTxIndex.get(hash);
         String publicKeyHash = BytesConverter.byteToHexString(entry.transactionOutput.publicKeyHash, 64);
         ArrayList<UTXOEntry> tmp = availableUTXOsForPublicKey.get(publicKeyHash);
         //TODO CHECK IF EXISTS
         if(tmp.contains(entry))
             tmp.remove(entry);
+
+        transactionHashToBlockAndTxIndex.remove(hash);
     }
+
 
     public ArrayList<UTXOEntry> getUTXOsAvailableForPublicKey(String hash) {
         //TODO handle exception

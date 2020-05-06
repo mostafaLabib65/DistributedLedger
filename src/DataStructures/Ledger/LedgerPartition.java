@@ -15,7 +15,20 @@ public class LedgerPartition {
     int currentDifficulty;
     int startingLedgerIndex;
 
-    boolean addBlock(Block b) throws NoSuchAlgorithmException {
+
+    public LedgerPartition(int start) {
+
+        blocks = new ArrayList<>();
+        startingLedgerIndex = start;
+        utxoSet = new UTXOSet();
+
+        //TODO Should not be here
+        currentDifficulty = 10;
+    }
+
+
+
+    public boolean addBlock(Block b) throws NoSuchAlgorithmException {
         if(!(
                 BytesConverter.byteToHexString(b.getPreviousHash(), 64).equals(
                 BytesConverter.byteToHexString(blocks.get(blocks.size() - 1).getPreviousHash(), 64)
@@ -30,7 +43,6 @@ public class LedgerPartition {
 
             //TODO ORDER IS IMPORTANT!!
 
-            utxoSet.removeUTXOToPublicKey(usedUTXOs.get(i));
             utxoSet.removeUTXOEntry(usedUTXOs.get(i));
         }
 

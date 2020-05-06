@@ -22,6 +22,15 @@ public abstract class Transaction {
     public TransactionOutput[] transactionOutputs;
 
 
+    public Transaction(int inputCount, int outputCount){
+
+        inputCounter = inputCount;
+        outputCounter = outputCount;
+
+        transactionInputs = new TransactionInput[inputCount];
+        transactionOutputs = new TransactionOutput[outputCount];
+
+    }
 
     public TransactionOutput[] getTransactionOutputs() {
         return transactionOutputs;
@@ -102,8 +111,8 @@ public abstract class Transaction {
         o4.amount = 5000;
         o4.publicKeyHash = "Ah ya 7osty l soda yany yAma".getBytes();
 
-        Transaction t1 = new NormalTransaction();
-        Transaction t2 = new NormalTransaction();
+        Transaction t1 = new NormalTransaction(3,3);
+        Transaction t2 = new NormalTransaction(3,3);
 
         t1.transactionInputs = new TransactionInput[]{i1, i2, i3};
         t2.transactionInputs = new TransactionInput[]{i1, i2, i3};

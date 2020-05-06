@@ -11,6 +11,11 @@ public class Ledger {
     TransientPartitionTree partitionTree;
     int transientLedgerMaxLength;
 
+    public Ledger() {
+        baseLeadger = new LedgerPartition(0);
+        partitionTree = new TransientPartitionTree();
+        transientLedgerMaxLength = 0;
+    }
 
     public boolean addBlock(Block block) throws NoSuchAlgorithmException {
         if(!partitionTree.addBlock(block))
@@ -22,13 +27,10 @@ public class Ledger {
         return true;
     }
 
-
     public UTXOEntry[] getAvailableUTXOsForPublicKey(String publicKeyHash) {
 
-        //TODO
-
-
-        return null;
+        //TODO check validity
+        return partitionTree.getLongestBranchUTXOSet();
     }
 
 }

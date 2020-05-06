@@ -11,12 +11,9 @@ public class TransactionInput {
 
     public byte[] transactionHash;
     public int outputIndex = 0;
-
     public BigInteger signature;
     public BigInteger publicKey;
     public BigInteger publicKeyModulus;
-
-
     public int sequenceNumber = 0xFFFFFFFF;
 
     public byte[] getByteRepresentation() {
