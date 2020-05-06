@@ -7,14 +7,14 @@ import java.security.NoSuchAlgorithmException;
 
 public class Ledger {
 
-    LedgerPartition baseLeadger;
+    LedgerPartition baseLedger;
     TransientPartitionTree partitionTree;
     int transientLedgerMaxLength;
 
     public Ledger() {
-        baseLeadger = new LedgerPartition(0);
+        baseLedger = new LedgerPartition(0);
         partitionTree = new TransientPartitionTree();
-        transientLedgerMaxLength = 0;
+        transientLedgerMaxLength = 10;
     }
 
     public boolean addBlock(Block block) throws NoSuchAlgorithmException {
@@ -22,7 +22,7 @@ public class Ledger {
             return false;
         if (partitionTree.getMaxBranchDepth() > transientLedgerMaxLength) {
             Block tmp = partitionTree.removeFirstBlock();
-            baseLeadger.addBlock(tmp);
+            baseLedger.addBlock(tmp);
         }
         return true;
     }

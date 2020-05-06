@@ -10,10 +10,12 @@ public class TransientPartitionTree {
 
 
 
-    private HashMap<String, LedgerPartition> hashOfLastBlockinPartition; //TODO DONT FORGET TO UPDATE
+    private HashMap<String, BlockNode> hashOfLastBlockinPartition; //TODO DONT FORGET TO UPDATE
+    private int currentMaxDepth;
 
     public TransientPartitionTree() {
         hashOfLastBlockinPartition = new HashMap<>();
+        currentMaxDepth = 0;
     }
 
 

@@ -26,8 +26,9 @@ public class Block {
         header.hashOfPrevBlock = hash;
     }
 
-    public void setMerkleTree() {
+    public  byte[] getMerkleTreeRoot() {
         //TODO !!!
+        return null;
     }
 
 
