@@ -14,14 +14,18 @@ public abstract class Process {
     private ClientRunnable clientRunnable;
     private ServerRunnable serverRunnable;
     private ProcessListener processListener;
+    MQ processClientMQ;
+    int port;
+    InetAddress address;
 
     public Process(int port, InetAddress address){
         MQ serverProcessMQ = new MQ(Configs.MAX_MQ_LENGTH);
-        MQ processClientMQ = new MQ(Configs.MAX_MQ_LENGTH);
-
+        processClientMQ = new MQ(Configs.MAX_MQ_LENGTH);
         serverRunnable = new ServerRunnable(port, address, serverProcessMQ);
         clientRunnable = new ClientRunnable(processClientMQ);
         processListener = new ProcessListener(serverProcessMQ, this);
+        this.port = port;
+        this.address = address;
     }
 
 
@@ -37,4 +41,6 @@ public abstract class Process {
     }
 
     public abstract void handleEvent(CommunicationUnit cu);
+
+    public abstract void initiateConnection();
 }

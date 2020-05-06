@@ -12,10 +12,10 @@ public class NetworkMain {
             InetAddress address = InetAddress.getByName("127.0.0.1");
             Process process = new ConcreteProcess(port, address);
             process.start();
+            process.initiateConnection();
             sleep(15000);
         } catch (UnknownHostException | InterruptedException e) {
             e.printStackTrace();
         }
-
     }
 }

@@ -1,6 +1,7 @@
 package network.runnables;
 
 import network.entities.CommunicationUnit;
+import network.events.Events;
 import network.mq.MQ;
 import network.state.ActiveClients;
 
@@ -23,22 +24,37 @@ public class ClientRunnable implements Runnable{
         try{
             while(true){
                 CommunicationUnit cu = processClientMQ.getMessage();
-                Collection<Socket> clientSockets = ActiveClients.getActiveClients().getAllActiveSockets();
-                for (Socket clientSocket : clientSockets) {
-                    try {
-                        ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
-                        outputStream.writeObject(cu);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                if(cu.getEvent() == Events.RECEIVE_ADDRESS){
+                    initiateNewConnection(cu);
+                } else {
+                    broadcast(cu);
                 }
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
     }
 
+    private void initiateNewConnection(CommunicationUnit cu) throws IOException {
+        Socket clientSocket = new Socket(cu.getSocketAddress(), cu.getSocketPort());
+        writeToSocket(clientSocket, cu);
+    }
+
+    private void broadcast(CommunicationUnit cu) {
+        Collection<Socket> clientSockets = ActiveClients.getActiveClients().getAllActiveSockets();
+        for (Socket clientSocket : clientSockets) {
+            try {
+                ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+                outputStream.writeObject(cu);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 
-
+    private void writeToSocket(Socket socket, CommunicationUnit cu) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+        outputStream.writeObject(cu);
+    }
 }
