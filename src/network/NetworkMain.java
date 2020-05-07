@@ -27,6 +27,11 @@ public class NetworkMain {
 
             process.invokeClientEvent(cu);
             sleep(15000);
+
+            cu = new CommunicationUnit();
+            cu.setEvent(Events.TRANSACTION);
+            process.invokeClientEvent(cu);
+
         } catch (UnknownHostException | InterruptedException e) {
             e.printStackTrace();
         }

@@ -34,6 +34,11 @@ public class ServerRunnable implements Runnable{
 
                     ObjectInputStream in = new ObjectInputStream(server.getInputStream());
                     CommunicationUnit cu = (CommunicationUnit) in.readObject();
+
+                    String remoteAddress = server.getRemoteSocketAddress().toString();
+                    cu.setSocketAddress(getCleanAddress(remoteAddress));
+                    cu.setSocketPort(getCleanPort(remoteAddress));
+
                     serverProcessMQ.putMessage(cu);
                 } catch (IOException | InterruptedException | ClassNotFoundException e) {
                     e.printStackTrace();
@@ -42,5 +47,13 @@ public class ServerRunnable implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getCleanAddress(String remoteAddress){
+        return remoteAddress.split(":")[0].substring(1);
+    }
+
+    private int getCleanPort(String remoteAddress){
+        return Integer.parseInt(remoteAddress.split(":")[1]);
     }
 }
