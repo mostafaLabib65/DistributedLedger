@@ -1,5 +1,8 @@
 package network.entities;
 
+import DataStructures.Block.Block;
+import DataStructures.Ledger.Ledger;
+import DataStructures.Transaction.Transaction;
 import network.events.Events;
 import java.io.Serializable;
 
@@ -9,6 +12,9 @@ public class CommunicationUnit implements Serializable {
     private Events event;
     private String socketAddress;
     private int socketPort;
+    private Ledger ledger;
+    private Block block;
+    private Transaction transaction;
 
     public Events getEvent() {
         return event;
@@ -32,5 +38,29 @@ public class CommunicationUnit implements Serializable {
 
     public void setSocketPort(int socketPort) {
         this.socketPort = socketPort;
+    }
+
+    public Ledger getLedger() {
+        return ledger;
+    }
+
+    public void setLedger(Ledger ledger) {
+        this.ledger = ledger;
+    }
+
+    public Block getBlock() {
+        return block;
+    }
+
+    public void setBlock(Block block) {
+        this.block = block;
+    }
+
+    public Transaction getTransaction() {
+        return transaction;
+    }
+
+    public void setTransaction(Transaction transaction) {
+        this.transaction = transaction;
     }
 }
