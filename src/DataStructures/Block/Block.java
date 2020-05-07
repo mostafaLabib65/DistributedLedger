@@ -14,8 +14,8 @@ import java.util.ArrayList;
 
 public class Block {
 
-    private BlockHeader header;
-    private Transaction[] transactions;
+    public BlockHeader header;
+    public Transaction[] transactions;
 
     public Block(int N) {
         transactions = new Transaction[N];
@@ -71,6 +71,11 @@ public class Block {
 
         }
     }
+
+    public byte[] getHash() throws NoSuchAlgorithmException {
+        return header.hashBlockHeader();
+    }
+
     public ArrayList<String> getUsedUTXOs() throws NoSuchAlgorithmException {
         ArrayList<String> usedUTXOs = new ArrayList<>();
         for (int i = 0; i < this.transactions.length; i++) {
@@ -198,20 +203,6 @@ public class Block {
 
         System.out.println("test");
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

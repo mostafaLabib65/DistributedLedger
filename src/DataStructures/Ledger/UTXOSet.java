@@ -41,9 +41,10 @@ public class UTXOSet {
         UTXOEntry entry = transactionHashToBlockAndTxIndex.get(hash);
         String publicKeyHash = BytesConverter.byteToHexString(entry.transactionOutput.publicKeyHash, 64);
         ArrayList<UTXOEntry> tmp = availableUTXOsForPublicKey.get(publicKeyHash);
-        //TODO CHECK IF EXISTS
         if(tmp.contains(entry))
             tmp.remove(entry);
+        if(tmp.isEmpty())
+            availableUTXOsForPublicKey.remove(publicKeyHash);
 
         transactionHashToBlockAndTxIndex.remove(hash);
     }
