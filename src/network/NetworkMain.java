@@ -12,7 +12,12 @@ public class NetworkMain {
             InetAddress address = InetAddress.getByName("127.0.0.1");
             Process process = new ConcreteProcess(port, address);
             process.start();
-            process.initiateConnection();
+
+            // Initiate initial conditions
+            int peerPort = 4000;
+            String peerAddress = "192.168.1.2";
+
+            process.initiateConnection(peerAddress, peerPort);
             sleep(15000);
         } catch (UnknownHostException | InterruptedException e) {
             e.printStackTrace();

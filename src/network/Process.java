@@ -2,6 +2,7 @@ package network;
 
 import network.entities.CommunicationUnit;
 import network.entities.Configs;
+import network.events.Events;
 import network.mq.MQ;
 import network.runnables.ClientRunnable;
 import network.runnables.ProcessListener;
@@ -40,7 +41,17 @@ public abstract class Process {
         new Thread(processListener).start();
     }
 
-    public abstract void handleEvent(CommunicationUnit cu);
+    public void initiateConnection(String address, int port){
+        try {
+            CommunicationUnit cu = new CommunicationUnit();
+            cu.setEvent(Events.RECEIVE_ADDRESS);
+            cu.setSocketPort(port);
+            cu.setSocketAddress(address);
+            processClientMQ.putMessage(cu);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
-    public abstract void initiateConnection();
+    public abstract void handleEvent(CommunicationUnit cu);
 }
