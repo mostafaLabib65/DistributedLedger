@@ -1,5 +1,8 @@
 package network;
 
+import network.entities.CommunicationUnit;
+import network.events.Events;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -10,14 +13,19 @@ public class NetworkMain {
         try {
             int port = 3000;
             InetAddress address = InetAddress.getByName("127.0.0.1");
-            Process process = new ConcreteProcess(port, address);
+            Process process = new Process(port, address);
             process.start();
 
             // Initiate initial conditions
             int peerPort = 4000;
             String peerAddress = "192.168.1.2";
 
-            process.initiateConnection(peerAddress, peerPort);
+            CommunicationUnit cu = new CommunicationUnit();
+            cu.setEvent(Events.ADDRESS);
+            cu.setSocketPort(peerPort);
+            cu.setSocketAddress(peerAddress);
+
+            process.invokeClientEvent(cu);
             sleep(15000);
         } catch (UnknownHostException | InterruptedException e) {
             e.printStackTrace();

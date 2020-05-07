@@ -2,9 +2,7 @@ package network.runnables;
 
 import network.entities.CommunicationUnit;
 import network.entities.Configs;
-import network.events.Events;
 import network.mq.MQ;
-import network.state.ActiveClients;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -36,13 +34,7 @@ public class ServerRunnable implements Runnable{
 
                     ObjectInputStream in = new ObjectInputStream(server.getInputStream());
                     CommunicationUnit cu = (CommunicationUnit) in.readObject();
-
-                    // Add registering client socket to pool of active clients
-                    if (cu.getEvent() == Events.RECEIVE_ADDRESS) {
-                        addClient(cu);
-                    } else {
-                        serverProcessMQ.putMessage(cu);
-                    }
+                    serverProcessMQ.putMessage(cu);
                 } catch (IOException | InterruptedException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -50,11 +42,5 @@ public class ServerRunnable implements Runnable{
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void addClient(CommunicationUnit cu) throws IOException {
-        ActiveClients activeClients = ActiveClients.getActiveClients();
-        Socket clientSocket = new Socket(cu.getSocketAddress(), cu.getSocketPort());
-        activeClients.addClient(clientSocket.getInetAddress().getHostAddress(), clientSocket);
     }
 }

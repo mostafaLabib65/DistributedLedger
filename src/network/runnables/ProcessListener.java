@@ -19,7 +19,7 @@ public class ProcessListener implements Runnable {
         try {
             while (true) {
                 CommunicationUnit cu = serverProcessMQ.getMessage();
-                process.handleEvent(cu);
+                process.handleServerEvent(cu);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();

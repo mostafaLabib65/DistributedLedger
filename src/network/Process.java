@@ -2,7 +2,7 @@ package network;
 
 import network.entities.CommunicationUnit;
 import network.entities.Configs;
-import network.events.Events;
+import network.factory.HandlerFactory;
 import network.mq.MQ;
 import network.runnables.ClientRunnable;
 import network.runnables.ProcessListener;
@@ -10,14 +10,12 @@ import network.runnables.ServerRunnable;
 
 import java.net.InetAddress;
 
-public abstract class Process {
+public class Process {
 
     private ClientRunnable clientRunnable;
     private ServerRunnable serverRunnable;
     private ProcessListener processListener;
-    MQ processClientMQ;
-    int port;
-    InetAddress address;
+    private MQ processClientMQ;
 
     public Process(int port, InetAddress address){
         MQ serverProcessMQ = new MQ(Configs.MAX_MQ_LENGTH);
@@ -25,8 +23,6 @@ public abstract class Process {
         serverRunnable = new ServerRunnable(port, address, serverProcessMQ);
         clientRunnable = new ClientRunnable(processClientMQ);
         processListener = new ProcessListener(serverProcessMQ, this);
-        this.port = port;
-        this.address = address;
     }
 
 
@@ -41,17 +37,15 @@ public abstract class Process {
         new Thread(processListener).start();
     }
 
-    public void initiateConnection(String address, int port){
+    public void invokeClientEvent(CommunicationUnit cu){
         try {
-            CommunicationUnit cu = new CommunicationUnit();
-            cu.setEvent(Events.RECEIVE_ADDRESS);
-            cu.setSocketPort(port);
-            cu.setSocketAddress(address);
             processClientMQ.putMessage(cu);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public abstract void handleEvent(CommunicationUnit cu);
+    public void handleServerEvent(CommunicationUnit cu){
+        HandlerFactory.getHandler(cu.getEvent()).handleIncoming(cu);
+    }
 }
