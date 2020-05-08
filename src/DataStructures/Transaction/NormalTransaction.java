@@ -6,6 +6,11 @@ public class NormalTransaction extends Transaction {
     }
 
     @Override
+    public boolean isValidOutputCount() {
+        return this.transactionOutputs.length <= 2;
+    }
+
+    @Override
     public boolean validateInputOutputDifference(long sum) {
         return sum >= 0;
     }

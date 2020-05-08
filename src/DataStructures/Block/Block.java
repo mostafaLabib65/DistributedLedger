@@ -66,6 +66,7 @@ public class Block {
                 entry.blockIndex = blockIndex;
                 entry.transactionIndex = i;
                 entry.transactionOutput = this.transactions[i].transactionOutputs[j];
+                entry.outputIndex = j;
                 utxoSet.addUTXOEntry(key, entry);
             }
 
@@ -178,10 +179,10 @@ public class Block {
 
 
 
-        Transaction t1 = new NormalTransaction(2,3);
+        Transaction t1 = new NormalTransaction(2,2);
 
         t1.transactionInputs = new TransactionInput[]{i1, i2};
-        t1.transactionOutputs = new TransactionOutput[]{o1, o2, o3};
+        t1.transactionOutputs = new TransactionOutput[]{o1, o2};
 
 
         b1.header.hashOfPrevBlock = "test".getBytes();
@@ -197,6 +198,7 @@ public class Block {
         UTXOSet set = new UTXOSet();
         b1.addTransactionsToUTXOSet(set,0);
 
+        System.out.println(b1.isValidPOWBlock(0,set));
         System.out.println(b2.isValidPOWBlock(0,set));
         ArrayList<String> t = b2.getUsedUTXOs();
 

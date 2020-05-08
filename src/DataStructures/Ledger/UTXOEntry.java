@@ -7,5 +7,6 @@ public class UTXOEntry {
     public int blockIndex;
     public int transactionIndex;
     public Transaction transaction;
+    public int outputIndex;
     public TransactionOutput transactionOutput;
 }

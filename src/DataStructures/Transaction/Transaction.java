@@ -129,6 +129,8 @@ public abstract class Transaction {
 
     }
 
+    public abstract boolean isValidOutputCount();
+
 
     public abstract boolean validateInputOutputDifference(long sum);
 
