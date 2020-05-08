@@ -21,9 +21,9 @@ public class TransactionsValidator {
 
         for (int i = 0; i < transactions.length; i++) {
 
-            if (transactions[i].outputCounter != transactions[i].getTransactionOutputs().length)
+            if (transactions[i].getOutputCounter() != transactions[i].getTransactionOutputs().length)
                 return false;
-            if (transactions[i].inputCounter != transactions[i].getTransactionInputs().length)
+            if (transactions[i].getInputCounter() != transactions[i].getTransactionInputs().length)
                 return false;
             sum = 0;
 

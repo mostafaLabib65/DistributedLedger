@@ -9,8 +9,8 @@ import java.util.HashMap;
 
 public class UTXOSet {
 
-    public HashMap<String,UTXOEntry> transactionHashToBlockAndTxIndex;
-    public HashMap<String,ArrayList<UTXOEntry>> availableUTXOsForPublicKey;
+    private HashMap<String,UTXOEntry> transactionHashToBlockAndTxIndex;
+    private HashMap<String,ArrayList<UTXOEntry>> availableUTXOsForPublicKey;
 
 
     public UTXOSet() {

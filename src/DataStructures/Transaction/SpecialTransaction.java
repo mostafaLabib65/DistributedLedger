@@ -9,7 +9,7 @@ public class SpecialTransaction extends Transaction {
 
     @Override
     public boolean isValidOutputCount() {
-        return this.transactionOutputs.length > 0;
+        return this.getTransactionOutputs().length > 0;
     }
 
     @Override

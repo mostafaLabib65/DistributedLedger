@@ -7,7 +7,7 @@ public class NormalTransaction extends Transaction {
 
     @Override
     public boolean isValidOutputCount() {
-        return this.transactionOutputs.length <= 2;
+        return this.getTransactionOutputs().length <= 2;
     }
 
     @Override

@@ -14,8 +14,8 @@ import java.util.ArrayList;
 
 public class Block {
 
-    public BlockHeader header;
-    public Transaction[] transactions;
+    private BlockHeader header;
+    private Transaction[] transactions;
 
     public Block(int N) {
         transactions = new Transaction[N];
@@ -31,6 +31,18 @@ public class Block {
         return null;
     }
 
+
+    public void setHeader(BlockHeader header) {
+        this.header = header;
+    }
+
+    public BlockHeader getHeader() {
+        return header;
+    }
+
+    public void setTransactions(Transaction[] transactions) {
+        this.transactions = transactions;
+    }
 
     public byte[] getPreviousHash() {
         return header.hashOfPrevBlock;
@@ -54,7 +66,7 @@ public class Block {
     public void addTransactionsToUTXOSet(UTXOSet utxoSet, int blockIndex) throws NoSuchAlgorithmException {
         for (int i = 0; i < this.transactions.length; i++) {
             byte[] hash = transactions[i].getTransactionHash();
-            for (int j = 0; j < this.transactions[i].transactionOutputs.length; j++) {
+            for (int j = 0; j < this.transactions[i].getTransactionOutputs().length; j++) {
                 ArrayList<byte[]> hashAndIndex = new ArrayList<>();
                 byte[] index = BytesConverter.intToBytes(j);
                 hashAndIndex.add(hash);
@@ -65,7 +77,7 @@ public class Block {
                 entry.transaction = this.transactions[i];
                 entry.blockIndex = blockIndex;
                 entry.transactionIndex = i;
-                entry.transactionOutput = this.transactions[i].transactionOutputs[j];
+                entry.transactionOutput = this.transactions[i].getTransactionOutputs()[j];
                 entry.outputIndex = j;
                 utxoSet.addUTXOEntry(key, entry);
             }
@@ -80,7 +92,7 @@ public class Block {
     public ArrayList<String> getUsedUTXOs() throws NoSuchAlgorithmException {
         ArrayList<String> usedUTXOs = new ArrayList<>();
         for (int i = 0; i < this.transactions.length; i++) {
-            for (int j = 0; j < this.transactions[i].transactionInputs.length; j++) {
+            for (int j = 0; j < this.transactions[i].getTransactionInputs().length; j++) {
                 TransactionInput input = transactions[i].getTransactionInputs()[j];
                 byte[] hash = input.transactionHash;
                 ArrayList<byte[]> hashAndIndex = new ArrayList<>();
@@ -160,7 +172,7 @@ public class Block {
         o9.publicKeyHash = pk2Hash;
 
         Transaction t0 = new SpecialTransaction(4);
-        t0.transactionOutputs = new TransactionOutput[]{o6, o7 , o8, o9};
+        t0.setTransactionOutputs(new TransactionOutput[]{o6, o7 , o8, o9});
         byte[] t0Hash = t0.getTransactionHash();
 
         i1.publicKey = pk1;
@@ -181,8 +193,8 @@ public class Block {
 
         Transaction t1 = new NormalTransaction(2,2);
 
-        t1.transactionInputs = new TransactionInput[]{i1, i2};
-        t1.transactionOutputs = new TransactionOutput[]{o1, o2};
+        t1.setTransactionInputs( new TransactionInput[]{i1, i2});
+        t1.setTransactionOutputs( new TransactionOutput[]{o1, o2});
 
 
         b1.header.hashOfPrevBlock = "test".getBytes();

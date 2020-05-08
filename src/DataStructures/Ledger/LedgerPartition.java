@@ -119,7 +119,7 @@ public class LedgerPartition {
         o9.publicKeyHash = pk2Hash;
 
         Transaction t0 = new SpecialTransaction(4);
-        t0.transactionOutputs = new TransactionOutput[]{o6, o7 , o8, o9};
+        t0.setTransactionOutputs(new TransactionOutput[]{o6, o7 , o8, o9});
         byte[] t0Hash = t0.getTransactionHash();
 
         i1.publicKey = pk1;
@@ -140,19 +140,25 @@ public class LedgerPartition {
 
         Transaction t1 = new NormalTransaction(2,3);
 
-        t1.transactionInputs = new TransactionInput[]{i1, i2};
-        t1.transactionOutputs = new TransactionOutput[]{o1, o2, o3};
+        t1.setTransactionInputs( new TransactionInput[]{i1, i2});
+        t1.setTransactionOutputs( new TransactionOutput[]{o1, o2});
 
 
-        b1.header.hashOfPrevBlock = "test".getBytes();
-        b1.header.hashOfMerkleRoot = "merkle".getBytes();
-        b1.header.nonce = 1;
-        b1.transactions = new Transaction[]{t0};
+        BlockHeader h4 = new BlockHeader();
+        BlockHeader h3 = new BlockHeader();
 
-        b2.header.hashOfPrevBlock = "test".getBytes();
-        b2.header.hashOfMerkleRoot = "merkle".getBytes();
-        b2.header.nonce = 1;
-        b2.transactions = new Transaction[]{t1};
+        h3.hashOfPrevBlock = "test".getBytes();
+        h3.hashOfMerkleRoot = "merkle".getBytes();
+        h3.nonce = 1;
+        b1.setHeader(h3);
+        b1.setTransactions( new Transaction[]{t0});
+
+
+        h4.hashOfPrevBlock = "test".getBytes();
+        h4.hashOfMerkleRoot = "merkle".getBytes();
+        h4.nonce = 1;
+        b2.setHeader(h4);
+        b2.setTransactions( new Transaction[]{t1});
         b2.setHashOfPreviousBlock(b1.getHash());
 
 
@@ -172,24 +178,29 @@ public class LedgerPartition {
         i3.transactionHash = t1.getTransactionHash();
 
 
-        t2.transactionInputs = new TransactionInput[]{i3};
-        t2.transactionOutputs = new TransactionOutput[]{o1};
+        t2.setTransactionInputs( new TransactionInput[]{i3});
+        t2.setTransactionOutputs( new TransactionOutput[]{o1});
 
         Block b3 = new Block(1);
 
-        b3.header.hashOfPrevBlock = "test".getBytes();
-        b3.header.hashOfMerkleRoot = "merkle".getBytes();
-        b3.header.nonce = 1;
-        b3.transactions = new Transaction[]{t2};
+
+        BlockHeader h1 = new BlockHeader();
+        BlockHeader h2 = new BlockHeader();
+        h1.hashOfPrevBlock = "test".getBytes();
+        h1.hashOfMerkleRoot = "merkle".getBytes();
+        h1.nonce = 1;
+        b3.setHeader(h1);
+        b3.setTransactions(new Transaction[]{t2});
         b3.setHashOfPreviousBlock(b1.getHash());
 
 
         Block b4 = new Block(1);
 
-        b4.header.hashOfPrevBlock = "test".getBytes();
-        b4.header.hashOfMerkleRoot = "merkle".getBytes();
-        b4.header.nonce = 1;
-        b4.transactions = new Transaction[]{t0};
+        h2.hashOfPrevBlock = "test".getBytes();
+        h2.hashOfMerkleRoot = "merkle".getBytes();
+        h2.nonce = 1;
+        b4.setHeader(h2);
+        b4.setTransactions( new Transaction[]{t0});
         b4.setHashOfPreviousBlock(b2.getHash());
 
 
