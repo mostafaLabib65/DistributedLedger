@@ -5,6 +5,7 @@ import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
 import network.events.Events;
 import java.io.Serializable;
+import java.util.List;
 
 public class CommunicationUnit implements Serializable {
 
@@ -15,6 +16,10 @@ public class CommunicationUnit implements Serializable {
     private Ledger ledger;
     private Block block;
     private Transaction transaction;
+
+
+    private String hashedPublicKey;
+    private List<String> hashedPublicKeys;
 
     public Events getEvent() {
         return event;
@@ -62,5 +67,21 @@ public class CommunicationUnit implements Serializable {
 
     public void setTransaction(Transaction transaction) {
         this.transaction = transaction;
+    }
+
+    public String getHashedPublicKey() {
+        return hashedPublicKey;
+    }
+
+    public void setHashedPublicKey(String hashedPublicKey) {
+        this.hashedPublicKey = hashedPublicKey;
+    }
+
+    public List<String> getHashedPublicKeys() {
+        return hashedPublicKeys;
+    }
+
+    public void setHashedPublicKeys(List<String> hashedPublicKeys) {
+        this.hashedPublicKeys = hashedPublicKeys;
     }
 }
