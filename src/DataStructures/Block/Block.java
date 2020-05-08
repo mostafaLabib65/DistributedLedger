@@ -1,5 +1,6 @@
 package DataStructures.Block;
 
+import DataStructures.Block.MerkleTree.MerkleTree;
 import DataStructures.Ledger.UTXOEntry;
 import DataStructures.Ledger.UTXOSet;
 import DataStructures.Transaction.*;
@@ -16,19 +17,21 @@ public class Block {
 
     private BlockHeader header;
     private Transaction[] transactions;
+    private MerkleTree merkleTree;
 
     public Block(int N) {
         transactions = new Transaction[N];
         header = new BlockHeader();
+        merkleTree = new MerkleTree();
     }
 
     public void setHashOfPreviousBlock(byte[] hash) {
         header.hashOfPrevBlock = hash;
     }
 
-    public  byte[] getMerkleTreeRoot() {
-        //TODO !!!
-        return null;
+    public  byte[] getMerkleTreeRoot() throws NoSuchAlgorithmException {
+        this.merkleTree.buildTree();
+        return this.merkleTree.getRootHash();
     }
 
 
@@ -42,6 +45,11 @@ public class Block {
 
     public void setTransactions(Transaction[] transactions) {
         this.transactions = transactions;
+        try {
+            this.merkleTree.addTransactions(transactions);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 
     public byte[] getPreviousHash() {
@@ -200,7 +208,9 @@ public class Block {
         b1.header.hashOfPrevBlock = "test".getBytes();
         b1.header.hashOfMerkleRoot = "merkle".getBytes();
         b1.header.nonce = 1;
-        b1.transactions = new Transaction[]{t0};
+        b1.transactions = new Transaction[]{t0, t1, t0};
+        b1.setTransactions(b1.transactions);
+        System.out.println(b1.getMerkleTreeRoot());
 
         b2.header.hashOfPrevBlock = "test".getBytes();
         b2.header.hashOfMerkleRoot = "merkle".getBytes();
@@ -209,6 +219,7 @@ public class Block {
 
         UTXOSet set = new UTXOSet();
         b1.addTransactionsToUTXOSet(set,0);
+
 
         System.out.println(b1.isValidPOWBlock(0,set));
         System.out.println(b2.isValidPOWBlock(0,set));

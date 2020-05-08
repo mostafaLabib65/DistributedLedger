@@ -55,7 +55,7 @@ public class MerkleTree {
                 rightChild = nodes.get(i + 1);
             parents.add(new MerkleNode(leftChild, rightChild));
         }
-
+        buildTree(parents);
     }
 
 }
