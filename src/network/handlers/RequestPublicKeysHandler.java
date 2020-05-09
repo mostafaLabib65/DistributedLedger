@@ -1,8 +1,10 @@
 package network.handlers;
 
 import network.entities.CommunicationUnit;
+import network.events.Events;
+import network.state.Subscription;
 
-public class LedgerHandler implements Handler {
+public class RequestPublicKeysHandler implements Handler {
     @Override
     public void handleOutgoing(CommunicationUnit cu) {
         throw new UnsupportedOperationException();
@@ -10,6 +12,6 @@ public class LedgerHandler implements Handler {
 
     @Override
     public void handleIncoming(CommunicationUnit cu) {
-        throw new UnsupportedOperationException();
+        Subscription.getSubscription().notify(Events.REQUEST_PUBLICKEYS, cu);
     }
 }

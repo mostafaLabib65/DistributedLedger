@@ -1,6 +1,8 @@
 package network.handlers;
 
 import network.entities.CommunicationUnit;
+import network.events.Events;
+import network.state.Subscription;
 
 public class BlockHandler implements Handler {
     @Override
@@ -10,6 +12,6 @@ public class BlockHandler implements Handler {
 
     @Override
     public void handleIncoming(CommunicationUnit cu) {
-        throw new UnsupportedOperationException();
+        Subscription.getSubscription().notify(Events.BLOCK, cu);
     }
 }

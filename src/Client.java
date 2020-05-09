@@ -1,5 +1,3 @@
-package network.state;
-
 import DataStructures.Ledger.Ledger;
 import DataStructures.Ledger.UTXOEntry;
 import DataStructures.Transaction.NormalTransaction;
@@ -12,6 +10,7 @@ import Utils.SHA;
 import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
+import network.state.Subscription;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -194,7 +193,7 @@ public class Client implements Subscription.Subscriber {
 
     private void sendLedger() {
         CommunicationUnit cu = new CommunicationUnit();
-        cu.setEvent(Events.TRANSACTION);
+        cu.setEvent(Events.RECEIVE_LEDGER);
         cu.setLedger(ledger);
         cu.setSocketPort(peerPort);
         cu.setSocketAddress(peerAddress);

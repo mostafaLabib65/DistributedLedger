@@ -13,13 +13,15 @@ public class HandlerFactory {
             case BLOCK:
                 return new BlockHandler();
             case RECEIVE_LEDGER:
-                return new LedgerHandler();
+                return new ReceiveLedgerHandler();
             case REQUEST_LEDGER:
-                return new LedgerHandler();
+                return new RequestLedgerHandler();
             case REQUEST_PUBLICKEYS:
-                return new PublickeysHandler();
+                return new RequestPublicKeysHandler();
             case PUBLISH_PUBLICKEY:
-                return new PublickeysHandler();
+                return new PublishPublicKeyHandler();
+            case RECEIVE_PUBLICKEYS:
+                return new ReceivePublicKeysHandler();
             default:
                 throw new RuntimeException("Missing Handler for event: " + events);
         }

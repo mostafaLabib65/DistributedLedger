@@ -1,9 +1,10 @@
 package network.handlers;
 
 import network.entities.CommunicationUnit;
-import network.handlers.Handler;
+import network.events.Events;
+import network.state.Subscription;
 
-public class PublickeysHandler implements Handler {
+public class RequestLedgerHandler implements Handler {
     @Override
     public void handleOutgoing(CommunicationUnit cu) {
         throw new UnsupportedOperationException();
@@ -11,6 +12,6 @@ public class PublickeysHandler implements Handler {
 
     @Override
     public void handleIncoming(CommunicationUnit cu) {
-        throw new UnsupportedOperationException();
+        Subscription.getSubscription().notify(Events.REQUEST_LEDGER, cu);
     }
 }
