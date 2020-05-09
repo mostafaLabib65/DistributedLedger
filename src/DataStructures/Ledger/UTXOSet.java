@@ -52,6 +52,7 @@ public class UTXOSet {
 
     public ArrayList<UTXOEntry> getUTXOsAvailableForPublicKey(String hash) {
         //TODO handle exception
+        //TODO handle no UTXO available (size = 0)
         return availableUTXOsForPublicKey.get(hash);
     }
 
