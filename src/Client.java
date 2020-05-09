@@ -159,7 +159,7 @@ public class Client implements Subscription.Subscriber {
         switch (events) {
             case BLOCK:
                 try {
-                    ledger.addBlock(cu.getBlock());
+                    ledger.addBlock(cu.getBlock()); // TODO handle missing block discrepancy
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
                 }
