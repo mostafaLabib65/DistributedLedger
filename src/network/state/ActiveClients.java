@@ -1,12 +1,12 @@
 package network.state;
 
-import java.net.Socket;
-import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ActiveClients {
 
-    private ConcurrentHashMap<String, Socket> activeClientsHashMap;
+    private ConcurrentHashMap<String, Integer> activeClientsHashMap;
     private static ActiveClients activeClients;
 
     private ActiveClients(){
@@ -19,9 +19,11 @@ public class ActiveClients {
         return activeClients;
     }
 
-    public void addClient(String address, Socket socket){
-        activeClientsHashMap.put(address, socket);
+    public void addClient(String address, int port){
+        activeClientsHashMap.put(address, port);
     }
 
-    public Collection<Socket> getAllActiveSockets() { return activeClientsHashMap.values(); }
+    public Set<Map.Entry<String, Integer>> getAllActiveClients() {
+        return activeClientsHashMap.entrySet();
+    }
 }

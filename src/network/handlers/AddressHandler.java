@@ -20,17 +20,12 @@ public class AddressHandler implements Handler {
 
     @Override
     public void handleIncoming(CommunicationUnit cu) {
-        try {
-            addClient(cu);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        addClient(cu);
     }
 
-    private void addClient(CommunicationUnit cu) throws IOException {
+    private void addClient(CommunicationUnit cu) {
         ActiveClients activeClients = ActiveClients.getActiveClients();
-        Socket clientSocket = new Socket(cu.getSocketAddress(), cu.getSocketPort());
-        activeClients.addClient(clientSocket.getInetAddress().getHostAddress(), clientSocket);
+        activeClients.addClient(cu.getSocketAddress(), cu.getSocketPort());
     }
 
     private void initiateNewConnection(CommunicationUnit cu) throws IOException {
@@ -38,6 +33,7 @@ public class AddressHandler implements Handler {
         Socket clientSocket = new Socket(cu.getSocketAddress(), cu.getSocketPort());
         ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
         outputStream.writeObject(cu);
+        clientSocket.close();
 
         // Add the connection to active clients
         addClient(cu);
