@@ -30,7 +30,7 @@ public class POWBlockConsumer extends Consensus {
     }
 
     private boolean isValidPOWBlock(Block block, int difficulty) throws NoSuchAlgorithmException {
-        BigInteger hash = new BigInteger(1, block.header.hashBlockHeader());
+        BigInteger hash = new BigInteger(1, block.getHeader().hashBlockHeader());
         BigInteger b1 = new BigInteger("2");
         int exponent = 256 - difficulty;
         BigInteger limit = b1.pow(exponent);
@@ -55,16 +55,16 @@ public class POWBlockConsumer extends Consensus {
                 try {
                     this.currentMiningBlock = this.blocks.get(0);
                     this.blocks.remove(currentMiningBlock);
-                    currentMiningBlock.header.hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
+                    currentMiningBlock.getHeader().hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
                     nonce = 0;
                     this.interrupt = false;
                     do{
-                        currentMiningBlock.header.nonce = nonce;
+                        currentMiningBlock.getHeader().nonce = nonce;
                         nonce++;
                     }while (!isValidPOWBlock(currentMiningBlock, this.difficulty) && !interrupt);
                     if(interrupt){
-                        for(Transaction acceptedTransaction: receivedBlock.transactions){
-                            for(Transaction testedTransaction: currentMiningBlock.transactions){
+                        for(Transaction acceptedTransaction: receivedBlock.getTransactions()){
+                            for(Transaction testedTransaction: currentMiningBlock.getTransactions()){
                                 //TODO check for equal transactions
                                 //TODO what if i found one
                             }

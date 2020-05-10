@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Block {
 
@@ -20,11 +21,15 @@ public class Block {
     private BlockHeader header;
     private Transaction[] transactions;
     private MerkleTree merkleTree;
+    private HashMap<String, Integer> transactionHashToIndex;
+
 
     public Block(int N) {
+        //TODO keep N
         transactions = new Transaction[N];
         header = new BlockHeader();
         merkleTree = new MerkleTree();
+        transactionHashToIndex = new HashMap<>();
     }
 
     public void setHashOfPreviousBlock(byte[] hash) {
@@ -45,13 +50,29 @@ public class Block {
         return header;
     }
 
-    public void setTransactions(Transaction[] transactions) {
+    public void setTransactions(Transaction[] transactions) throws NoSuchAlgorithmException {
         this.transactions = transactions;
+
+        for (int i = 0; i < transactions.length; i++) {
+            transactionHashToIndex.put(BytesConverter.byteToHexString(
+                    transactions[i].getTransactionHash(),64), i);
+        }
+
         try {
             this.merkleTree.addTransactions(transactions);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+    }
+
+    public int getIndexOfTransaction(Transaction transaction) throws NoSuchAlgorithmException {
+
+        String hash = BytesConverter.byteToHexString(
+                transaction.getTransactionHash(),64);
+        int index = -1;
+        if(!transactionHashToIndex.containsKey(hash))
+            return index;
+        return transactionHashToIndex.get(hash);
     }
 
     public byte[] getPreviousHash() {

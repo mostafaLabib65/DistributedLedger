@@ -80,7 +80,7 @@ public class BFTMiner implements Subscription.Subscriber{
         BlockHeader header = new BlockHeader();
         header.hashOfPrevBlock = new byte[]{0};
         this.block = new Block(this.blockSize);
-        block.header = header;
+        block.setHeader(header);
     }
 
 
