@@ -1,6 +1,6 @@
 package network.handlers;
 
-import network.Broadcaster;
+import network.utils.Broadcaster;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 import network.state.Subscription;
