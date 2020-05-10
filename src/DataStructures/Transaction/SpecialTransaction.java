@@ -14,6 +14,6 @@ public class SpecialTransaction extends Transaction {
 
     @Override
     public boolean validateInputOutputDifference(long sum) {
-        return sum < 0;
+        return sum >= -625000000;
     }
 }
