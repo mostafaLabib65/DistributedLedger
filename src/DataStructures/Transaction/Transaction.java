@@ -34,6 +34,7 @@ public abstract class Transaction {
     }
 
 
+
     public int getInputCounter() {
         return inputCounter;
     }
@@ -149,8 +150,8 @@ public abstract class Transaction {
 
     }
 
-    public abstract boolean isValidOutputCount();
 
+    public abstract boolean isValidOutputCount();
 
     public abstract boolean validateInputOutputDifference(long sum);
 

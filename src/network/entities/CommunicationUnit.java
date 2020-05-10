@@ -16,8 +16,7 @@ public class CommunicationUnit implements Serializable {
     private Ledger ledger;
     private Block block;
     private Transaction transaction;
-
-
+    private boolean BFTMsg;
     private String hashedPublicKey;
     private List<String> hashedPublicKeys;
 
@@ -69,6 +68,10 @@ public class CommunicationUnit implements Serializable {
         this.transaction = transaction;
     }
 
+    public boolean getBFTMsg(){ return BFTMsg; }
+
+    public void setBFTMsg(boolean msg) { this.BFTMsg = msg; }
+  
     public String getHashedPublicKey() {
         return hashedPublicKey;
     }

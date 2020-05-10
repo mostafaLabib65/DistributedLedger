@@ -8,6 +8,7 @@ public enum Events {
 
     // Block Chain
     BLOCK,
+    BFT_VOTE,
     REQUEST_LEDGER,
     RECEIVE_LEDGER,
     TRANSACTION,

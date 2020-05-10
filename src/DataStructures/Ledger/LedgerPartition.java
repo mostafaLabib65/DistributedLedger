@@ -119,6 +119,7 @@ public class LedgerPartition {
         o9.publicKeyHash = pk2Hash;
 
         Transaction t0 = new SpecialTransaction(4);
+
         t0.setTransactionOutputs(new TransactionOutput[]{o6, o7 , o8, o9});
         byte[] t0Hash = t0.getTransactionHash();
 
@@ -139,6 +140,7 @@ public class LedgerPartition {
 
 
         Transaction t1 = new NormalTransaction(2,3);
+
 
         t1.setTransactionInputs( new TransactionInput[]{i1, i2});
         t1.setTransactionOutputs( new TransactionOutput[]{o1, o2});
@@ -178,6 +180,7 @@ public class LedgerPartition {
         i3.transactionHash = t1.getTransactionHash();
 
 
+
         t2.setTransactionInputs( new TransactionInput[]{i3});
         t2.setTransactionOutputs( new TransactionOutput[]{o1});
 
@@ -195,6 +198,7 @@ public class LedgerPartition {
 
 
         Block b4 = new Block(1);
+
 
         h2.hashOfPrevBlock = "test".getBytes();
         h2.hashOfMerkleRoot = "merkle".getBytes();

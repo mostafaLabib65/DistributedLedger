@@ -1,5 +1,6 @@
 package DataStructures.Block;
 
+
 import DataStructures.Block.MerkleTree.MerkleTree;
 import DataStructures.Ledger.UTXOEntry;
 import DataStructures.Ledger.UTXOSet;
@@ -14,6 +15,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 
 public class Block {
+
 
     private BlockHeader header;
     private Transaction[] transactions;
@@ -74,6 +76,7 @@ public class Block {
     public void addTransactionsToUTXOSet(UTXOSet utxoSet, int blockIndex) throws NoSuchAlgorithmException {
         for (int i = 0; i < this.transactions.length; i++) {
             byte[] hash = transactions[i].getTransactionHash();
+
             for (int j = 0; j < this.transactions[i].getTransactionOutputs().length; j++) {
                 ArrayList<byte[]> hashAndIndex = new ArrayList<>();
                 byte[] index = BytesConverter.intToBytes(j);
@@ -85,6 +88,7 @@ public class Block {
                 entry.transaction = this.transactions[i];
                 entry.blockIndex = blockIndex;
                 entry.transactionIndex = i;
+
                 entry.transactionOutput = this.transactions[i].getTransactionOutputs()[j];
                 entry.outputIndex = j;
                 utxoSet.addUTXOEntry(key, entry);
@@ -100,6 +104,7 @@ public class Block {
     public ArrayList<String> getUsedUTXOs() throws NoSuchAlgorithmException {
         ArrayList<String> usedUTXOs = new ArrayList<>();
         for (int i = 0; i < this.transactions.length; i++) {
+
             for (int j = 0; j < this.transactions[i].getTransactionInputs().length; j++) {
                 TransactionInput input = transactions[i].getTransactionInputs()[j];
                 byte[] hash = input.transactionHash;
@@ -180,6 +185,7 @@ public class Block {
         o9.publicKeyHash = pk2Hash;
 
         Transaction t0 = new SpecialTransaction(4);
+
         t0.setTransactionOutputs(new TransactionOutput[]{o6, o7 , o8, o9});
         byte[] t0Hash = t0.getTransactionHash();
 
@@ -199,6 +205,7 @@ public class Block {
 
 
 
+
         Transaction t1 = new NormalTransaction(2,2);
 
         t1.setTransactionInputs( new TransactionInput[]{i1, i2});
@@ -208,6 +215,7 @@ public class Block {
         b1.header.hashOfPrevBlock = "test".getBytes();
         b1.header.hashOfMerkleRoot = "merkle".getBytes();
         b1.header.nonce = 1;
+
         b1.transactions = new Transaction[]{t0, t1, t0};
         b1.setTransactions(b1.transactions);
         System.out.println(b1.getMerkleTreeRoot());

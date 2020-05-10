@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class Ledger {
 
+
     private LedgerPartition baseLedger;
     private TransientPartitionTree partitionTree;
     private int transientLedgerMaxLength;
