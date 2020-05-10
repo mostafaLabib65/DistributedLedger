@@ -15,6 +15,7 @@ public class CommunicationUnit implements Serializable {
     private Ledger ledger;
     private Block block;
     private Transaction transaction;
+    private boolean BFTMsg;
 
     public Events getEvent() {
         return event;
@@ -63,4 +64,8 @@ public class CommunicationUnit implements Serializable {
     public void setTransaction(Transaction transaction) {
         this.transaction = transaction;
     }
+
+    public boolean getBFTMsg(){ return BFTMsg; }
+
+    public void setBFTMsg(boolean msg) { this.BFTMsg = msg; }
 }

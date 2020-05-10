@@ -7,6 +7,8 @@ public enum Events {
     BLOCK,
     LEDGER,
     TRANSACTION,
-
+    REQUEST_LEDGER,
+    RECEIVE_LEDGER,
+    BFT_VOTE,
     // Elections and Consensus
 }
