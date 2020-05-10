@@ -20,7 +20,16 @@ public class TransactionsValidator {
         //TODO -ve amount
 
         for (int i = 0; i < transactions.length; i++) {
+
+            if (transactions[i].getOutputCounter() != transactions[i].getTransactionOutputs().length)
+                return false;
+            if (transactions[i].getInputCounter() != transactions[i].getTransactionInputs().length)
+                return false;
             sum = 0;
+
+            if(!transactions[i].isValidOutputCount())
+                return false;
+
             for (int j = 0; j < transactions[i].getTransactionOutputs().length; j++) {
                 sum -= transactions[i].getTransactionOutputs()[j].amount;
             }

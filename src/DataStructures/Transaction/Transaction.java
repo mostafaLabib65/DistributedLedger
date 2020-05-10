@@ -13,13 +13,14 @@ import java.util.HashSet;
 
 public abstract class Transaction {
 
-    public int version = 1;
-    public int inputCounter = 0;
-    public int outputCounter = 0;
-    public int lockTime = 0;
+    private int version = 1;
+    private int inputCounter = 0;
+    private int outputCounter = 0;
+    private int lockTime = 0;
 
-    public TransactionInput[] transactionInputs;
-    public TransactionOutput[] transactionOutputs;
+    private TransactionInput[] transactionInputs;
+    private TransactionOutput[] transactionOutputs;
+
 
 
     public Transaction(int inputCount, int outputCount){
@@ -30,6 +31,26 @@ public abstract class Transaction {
         transactionInputs = new TransactionInput[inputCount];
         transactionOutputs = new TransactionOutput[outputCount];
 
+    }
+
+
+
+    public int getInputCounter() {
+        return inputCounter;
+    }
+
+    public int getOutputCounter() {
+        return outputCounter;
+    }
+
+    public void setTransactionOutputs(TransactionOutput[] transactionOutputs) {
+        outputCounter = transactionOutputs.length;
+        this.transactionOutputs = transactionOutputs;
+    }
+
+    public void setTransactionInputs(TransactionInput[] transactionInputs) {
+        inputCounter = transactionInputs.length;
+        this.transactionInputs = transactionInputs;
     }
 
     public TransactionOutput[] getTransactionOutputs() {
@@ -129,6 +150,8 @@ public abstract class Transaction {
 
     }
 
+
+    public abstract boolean isValidOutputCount();
 
     public abstract boolean validateInputOutputDifference(long sum);
 

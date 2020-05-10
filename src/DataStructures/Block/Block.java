@@ -1,5 +1,7 @@
 package DataStructures.Block;
 
+
+import DataStructures.Block.MerkleTree.MerkleTree;
 import DataStructures.Ledger.UTXOEntry;
 import DataStructures.Ledger.UTXOSet;
 import DataStructures.Transaction.*;
@@ -14,23 +16,43 @@ import java.util.ArrayList;
 
 public class Block {
 
-    public BlockHeader header;
-    public Transaction[] transactions;
+
+    private BlockHeader header;
+    private Transaction[] transactions;
+    private MerkleTree merkleTree;
 
     public Block(int N) {
         transactions = new Transaction[N];
         header = new BlockHeader();
+        merkleTree = new MerkleTree();
     }
 
     public void setHashOfPreviousBlock(byte[] hash) {
         header.hashOfPrevBlock = hash;
     }
 
-    public  byte[] getMerkleTreeRoot() {
-        //TODO !!!
-        return null;
+    public  byte[] getMerkleTreeRoot() throws NoSuchAlgorithmException {
+        this.merkleTree.buildTree();
+        return this.merkleTree.getRootHash();
     }
 
+
+    public void setHeader(BlockHeader header) {
+        this.header = header;
+    }
+
+    public BlockHeader getHeader() {
+        return header;
+    }
+
+    public void setTransactions(Transaction[] transactions) {
+        this.transactions = transactions;
+        try {
+            this.merkleTree.addTransactions(transactions);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
 
     public byte[] getPreviousHash() {
         return header.hashOfPrevBlock;
@@ -54,7 +76,8 @@ public class Block {
     public void addTransactionsToUTXOSet(UTXOSet utxoSet, int blockIndex) throws NoSuchAlgorithmException {
         for (int i = 0; i < this.transactions.length; i++) {
             byte[] hash = transactions[i].getTransactionHash();
-            for (int j = 0; j < this.transactions[i].transactionOutputs.length; j++) {
+
+            for (int j = 0; j < this.transactions[i].getTransactionOutputs().length; j++) {
                 ArrayList<byte[]> hashAndIndex = new ArrayList<>();
                 byte[] index = BytesConverter.intToBytes(j);
                 hashAndIndex.add(hash);
@@ -65,7 +88,9 @@ public class Block {
                 entry.transaction = this.transactions[i];
                 entry.blockIndex = blockIndex;
                 entry.transactionIndex = i;
-                entry.transactionOutput = this.transactions[i].transactionOutputs[j];
+
+                entry.transactionOutput = this.transactions[i].getTransactionOutputs()[j];
+                entry.outputIndex = j;
                 utxoSet.addUTXOEntry(key, entry);
             }
 
@@ -79,7 +104,8 @@ public class Block {
     public ArrayList<String> getUsedUTXOs() throws NoSuchAlgorithmException {
         ArrayList<String> usedUTXOs = new ArrayList<>();
         for (int i = 0; i < this.transactions.length; i++) {
-            for (int j = 0; j < this.transactions[i].transactionInputs.length; j++) {
+
+            for (int j = 0; j < this.transactions[i].getTransactionInputs().length; j++) {
                 TransactionInput input = transactions[i].getTransactionInputs()[j];
                 byte[] hash = input.transactionHash;
                 ArrayList<byte[]> hashAndIndex = new ArrayList<>();
@@ -159,7 +185,8 @@ public class Block {
         o9.publicKeyHash = pk2Hash;
 
         Transaction t0 = new SpecialTransaction(4);
-        t0.transactionOutputs = new TransactionOutput[]{o6, o7 , o8, o9};
+
+        t0.setTransactionOutputs(new TransactionOutput[]{o6, o7 , o8, o9});
         byte[] t0Hash = t0.getTransactionHash();
 
         i1.publicKey = pk1;
@@ -178,16 +205,20 @@ public class Block {
 
 
 
-        Transaction t1 = new NormalTransaction(2,3);
 
-        t1.transactionInputs = new TransactionInput[]{i1, i2};
-        t1.transactionOutputs = new TransactionOutput[]{o1, o2, o3};
+        Transaction t1 = new NormalTransaction(2,2);
+
+        t1.setTransactionInputs( new TransactionInput[]{i1, i2});
+        t1.setTransactionOutputs( new TransactionOutput[]{o1, o2});
 
 
         b1.header.hashOfPrevBlock = "test".getBytes();
         b1.header.hashOfMerkleRoot = "merkle".getBytes();
         b1.header.nonce = 1;
-        b1.transactions = new Transaction[]{t0};
+
+        b1.transactions = new Transaction[]{t0, t1, t0};
+        b1.setTransactions(b1.transactions);
+        System.out.println(b1.getMerkleTreeRoot());
 
         b2.header.hashOfPrevBlock = "test".getBytes();
         b2.header.hashOfMerkleRoot = "merkle".getBytes();
@@ -197,6 +228,8 @@ public class Block {
         UTXOSet set = new UTXOSet();
         b1.addTransactionsToUTXOSet(set,0);
 
+
+        System.out.println(b1.isValidPOWBlock(0,set));
         System.out.println(b2.isValidPOWBlock(0,set));
         ArrayList<String> t = b2.getUsedUTXOs();
 

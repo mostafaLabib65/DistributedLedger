@@ -1,14 +1,22 @@
 package network.events;
 
+// Process(Client-Server) Events
 public enum Events {
 
-    // Process(Client-Server) Events
+    // P2P
     ADDRESS,
+
+    // Block Chain
     BLOCK,
-    LEDGER,
-    TRANSACTION,
+    BFT_VOTE,
     REQUEST_LEDGER,
     RECEIVE_LEDGER,
-    BFT_VOTE,
+    TRANSACTION,
+
+    // Validation
+    REQUEST_PUBLICKEYS,
+    RECEIVE_PUBLICKEYS,
+    PUBLISH_PUBLICKEY
+
     // Elections and Consensus
 }

@@ -5,6 +5,7 @@ import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
 import network.events.Events;
 import java.io.Serializable;
+import java.util.List;
 
 public class CommunicationUnit implements Serializable {
 
@@ -16,6 +17,8 @@ public class CommunicationUnit implements Serializable {
     private Block block;
     private Transaction transaction;
     private boolean BFTMsg;
+    private String hashedPublicKey;
+    private List<String> hashedPublicKeys;
 
     public Events getEvent() {
         return event;
@@ -68,4 +71,20 @@ public class CommunicationUnit implements Serializable {
     public boolean getBFTMsg(){ return BFTMsg; }
 
     public void setBFTMsg(boolean msg) { this.BFTMsg = msg; }
+  
+    public String getHashedPublicKey() {
+        return hashedPublicKey;
+    }
+
+    public void setHashedPublicKey(String hashedPublicKey) {
+        this.hashedPublicKey = hashedPublicKey;
+    }
+
+    public List<String> getHashedPublicKeys() {
+        return hashedPublicKeys;
+    }
+
+    public void setHashedPublicKeys(List<String> hashedPublicKeys) {
+        this.hashedPublicKeys = hashedPublicKeys;
+    }
 }
