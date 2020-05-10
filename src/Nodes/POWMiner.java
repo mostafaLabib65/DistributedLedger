@@ -79,14 +79,14 @@ public class POWMiner implements Subscription.Subscriber{
         BlockHeader header = new BlockHeader();
         header.hashOfPrevBlock = new byte[]{0};
         this.block = new Block(this.blockSize);
-        block.header = header;
+        block.setHeader(header);
     }
 
     private void initializeBlock(){
         BlockHeader header = new BlockHeader();
 //        header.hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
         this.block = new Block(this.blockSize);
-        block.header = header;
+        block.setHeader(header);
     }
 
     private void requestLedger() {

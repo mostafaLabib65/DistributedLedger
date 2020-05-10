@@ -50,7 +50,7 @@ public class BFTBlockConsumer extends Consensus {
                 try {
                     this.currentMiningBlock = this.blocks.get(0);
                     this.blocks.remove(currentMiningBlock);
-                    currentMiningBlock.header.hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
+                    currentMiningBlock.getHeader().hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
                     if(!voteProcessRunning){
                         if(true){ //TODO validBlock
                             this.process.invokeClientEvent(cu);

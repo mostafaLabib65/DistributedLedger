@@ -4,6 +4,7 @@ import DataStructures.Block.Block;
 import DataStructures.Block.BlockHeader;
 import DataStructures.Transaction.Transaction;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
 public class BlockProducer implements Runnable {
@@ -25,7 +26,7 @@ public class BlockProducer implements Runnable {
         BlockHeader header = new BlockHeader();
         header.nonce = -1;
         this.block = new Block(this.blockSize);
-        block.header = header;
+        block.setHeader(header);
     }
     public void setInterrupt(Block receivedBlock){
         this.interrupted = true;
@@ -45,17 +46,21 @@ public class BlockProducer implements Runnable {
                 }
                 Transaction temp = this.transactions.get(0);
                 this.transactions.remove(temp);
-                this.block.transactions[this.transactionCounter] = temp;
+                this.block.getTransactions()[this.transactionCounter] = temp;
                 this.transactionCounter++;
                 if(this.transactionCounter == blockSize-1){
                     this.transactionCounter = 0;
-                    this.block.getMerkleTreeRoot();
+                    try {
+                        this.block.getMerkleTreeRoot();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    }
                     this.readyToMineBlocks.add(this.block);
                     notify();
                     this.initializeBlock();
                 }
                 if(this.interrupted){
-                    for(Transaction t: receivedBlock.transactions){
+                    for(Transaction t: receivedBlock.getTransactions()){
                         //TODO check if transaction repeated in any of the blocks
                         //TODO what if one is found
                     }
