@@ -16,6 +16,8 @@ public class Process {
     private ServerRunnable serverRunnable;
     private ProcessListener processListener;
     private MQ processClientMQ;
+    private InetAddress address;
+    private int port;
 
     public Process(int port, InetAddress address){
         MQ serverProcessMQ = new MQ(Configs.MAX_MQ_LENGTH);
@@ -23,6 +25,8 @@ public class Process {
         serverRunnable = new ServerRunnable(port, address, serverProcessMQ);
         clientRunnable = new ClientRunnable(processClientMQ);
         processListener = new ProcessListener(serverProcessMQ, this);
+        this.address = address;
+        this.port = port;
     }
 
 
@@ -43,6 +47,14 @@ public class Process {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getAddress() {
+        return address.getHostAddress();
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public void handleServerEvent(CommunicationUnit cu){
