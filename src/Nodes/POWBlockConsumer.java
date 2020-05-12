@@ -22,11 +22,14 @@ public class POWBlockConsumer extends Consensus {
     private Block receivedBlock;
     private Block currentMiningBlock;
     private int nonce;
-    public void setParams(ArrayList<Block> blocks, CommunicationUnit cu, Process process, Ledger ledger){
+    private boolean blockCorrupted = false;
+    private ArrayList<Transaction> allTransactions;
+    public void setParams(ArrayList<Block> blocks, CommunicationUnit cu, Process process, Ledger ledger, ArrayList<Transaction> transactions){
         this.blocks = blocks;
         this.cu = cu;
         this.process = process;
         this.ledger = ledger;
+        this.allTransactions = transactions;
     }
 
     private boolean isValidPOWBlock(Block block, int difficulty) throws NoSuchAlgorithmException {
@@ -53,25 +56,38 @@ public class POWBlockConsumer extends Consensus {
                     }
                 }
                 try {
-                    this.currentMiningBlock = this.blocks.get(0);
-                    this.blocks.remove(currentMiningBlock);
-                    currentMiningBlock.getHeader().hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
-                    nonce = 0;
+                    if(blockCorrupted){
+                        this.currentMiningBlock = this.blocks.get(0);
+                        this.blocks.remove(currentMiningBlock);
+                        currentMiningBlock.getHeader().hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
+                        nonce = 0;
+                    }
                     this.interrupt = false;
+                    this.blockCorrupted = false;
                     do{
                         currentMiningBlock.getHeader().nonce = nonce;
                         nonce++;
                     }while (!isValidPOWBlock(currentMiningBlock, this.difficulty) && !interrupt);
                     if(interrupt){
+                        Transaction[] transactions = currentMiningBlock.getTransactions();
                         for(Transaction acceptedTransaction: receivedBlock.getTransactions()){
-                            for(Transaction testedTransaction: currentMiningBlock.getTransactions()){
-                                //TODO check for equal transactions
-                                //TODO what if i found one
+                            int index = currentMiningBlock.getIndexOfTransaction(acceptedTransaction);
+                            if(index != -1){
+                                transactions[index] = null;
+                                blockCorrupted = true;
+                            }
+                        }
+                        if(blockCorrupted){
+                            for(Transaction t: transactions){
+                                if(t != null){
+                                    allTransactions.add(0, t);
+                                }
                             }
                         }
                     }else {
                         boolean success = this.ledger.addBlock(currentMiningBlock);
                         if(success){
+                            cu.setBlock(currentMiningBlock);
                             this.process.invokeClientEvent(cu);
                         }
                     }

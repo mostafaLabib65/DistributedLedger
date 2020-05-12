@@ -4,6 +4,8 @@ import DataStructures.Block.Block;
 import DataStructures.Block.BlockHeader;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
+import Utils.BytesConverter;
+import Utils.RSA;
 import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
@@ -12,6 +14,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static network.events.Events.*;
 
@@ -21,6 +24,7 @@ import static network.events.Events.*;
 public class BFTMiner implements Subscription.Subscriber{
     private Consensus blockConsumer;
     private BlockProducer blockProducer;
+    private VotingSystemLeader votingSystemLeader;
     private Ledger ledger;
     private Process process;
     private Block block;
@@ -30,29 +34,45 @@ public class BFTMiner implements Subscription.Subscriber{
     private String address;
     private int port;
     private int numOfParticipants;
-    public BFTMiner(Consensus blockConsumer, int blockSize, String address, int port, int numOfParticipants){
+    private RSA rsa = new RSA(2048);
+    private HashMap<String, Integer> transactionHashToIndex = new HashMap<>();
+    private boolean leader;
+    private ArrayList<Block> votingBlocksQueue = new ArrayList<>();
+    private VotingUnit votingUnit;
+    private int ID;
+    private Thread blockConsumerThread;
+    private Thread blockProducerThread;
+    private Thread votingSystemLeaderThread;
+    public BFTMiner(Consensus blockConsumer, int blockSize, String address, int port, int numOfParticipants, boolean leader, int ID){
         this.address = address;
         this.port = port;
         this.blockConsumer = blockConsumer;
         this.blockSize = blockSize;
         this.numOfParticipants = numOfParticipants;
+        this.leader = leader;
+        this.ID = ID;
         initializeNetwork();
         initializeSubscriptions();
         initializeBlockProducer();
         initializeBlockConsumer();
-//        initializeGenesisBlock(); //TODO we need to agree
-
+        if(leader)
+            initializeBlockVotingSystem();
     }
 
+    private void initializeBlockVotingSystem(){
+        this.votingSystemLeader = new VotingSystemLeader(votingBlocksQueue, this.process, this.votingBroadcast());
+        this.votingSystemLeaderThread = new Thread(this.votingSystemLeader);
+        votingSystemLeaderThread.start();
+    }
     private void initializeBlockProducer(){
-        this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize);
-        Thread blockProducerThread = new Thread(this.blockProducer);
+        this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize, this.rsa, this.leader, this.blockConsumerThread);
+        this.blockProducerThread = new Thread(this.blockProducer);
         blockProducerThread.start();
     }
 
     private void initializeBlockConsumer(){
-        this.blockConsumer.setParams(this.readyToMineBlocks, this.broadcastCommUnit(), this.process, this.ledger, this.numOfParticipants);
-        Thread blockConsumerThread = new Thread(this.blockConsumer);
+        this.blockConsumer.setParams(this.readyToMineBlocks, this.broadcastCommUnit(), this.process);
+        this.blockConsumerThread = new Thread(this.blockConsumer);
         blockConsumerThread.start();
     }
     private void initializeSubscriptions(){
@@ -76,13 +96,92 @@ public class BFTMiner implements Subscription.Subscriber{
 
     }
 
-    private void initializeGenesisBlock(){
-        BlockHeader header = new BlockHeader();
-        header.hashOfPrevBlock = new byte[]{0};
-        this.block = new Block(this.blockSize);
-        block.setHeader(header);
+
+
+
+
+    @Override
+    public void notify(Events event, CommunicationUnit cu) {
+        switch (event) {
+            case TRANSACTION:
+                serveTransactionEvent(cu);
+                break;
+
+            case BFT_REQUEST_ELECTION:
+                if(leader){
+                    this.votingBlocksQueue.add(cu.getBlock());
+                }
+                break;
+
+            case BFT_REQUEST_VOTE:
+                this.request_vote(cu.getBlock());
+                break;
+
+            case BFT_RECEIVE_VOTE:
+                this.receive_vote(cu.getBFTVote());
+                break;
+
+            case RECEIVE_LEDGER:
+                ledger = cu.getLedger(); //TODO check what to accept
+                break;
+
+            case REQUEST_LEDGER:
+                sendLedger();
+                break;
+        }
     }
 
+    private void request_vote(Block block){
+        CommunicationUnit cu = new CommunicationUnit();
+        cu.setEvent(BFT_RECEIVE_VOTE);
+        votingUnit = new VotingUnit(block, numOfParticipants);
+        int result = votingUnit.addVote(true);  //TODO this.leader.canBeAdded(block)
+        if(result == 1){
+            addBlock(block);
+        }
+        cu.setBFTVote(true); //TODO this.leader.canBeAdded(block)
+        cu.setSocketPort(this.port);
+        cu.setSocketAddress(this.address);
+        process.invokeClientEvent(cu);
+    }
+
+    private void receive_vote(boolean vote){
+        if(votingUnit != null){
+            int result = votingUnit.addVote(vote);
+            if(result == 1){
+                addBlock(votingUnit.getBlock());
+            }else if(result == 0 && leader){
+                this.votingSystemLeader.setReceivedBlock(block);
+                votingSystemLeaderThread.interrupt();
+            }
+        }
+    }
+
+    private void serveTransactionEvent(CommunicationUnit cu){
+        if(!repeatedTransaction(cu.getTransaction())){
+            this.transactions.add(cu.getTransaction());
+            if(transactions.size() == 1){
+                blockProducerThread.interrupt();
+            }
+            try {
+                transactionHashToIndex.put(BytesConverter.byteToHexString(
+                        cu.getTransaction().getTransactionHash(),64), this.transactions.size()-1);
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private boolean repeatedTransaction(Transaction transaction){
+        String hash = null;
+        try {
+            hash = BytesConverter.byteToHexString(
+                    transaction.getTransactionHash(),64);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return transactionHashToIndex.containsKey(hash);
+    }
 
     private void requestLedger() {
         CommunicationUnit cu = new CommunicationUnit();
@@ -91,29 +190,16 @@ public class BFTMiner implements Subscription.Subscriber{
         cu.setSocketAddress(this.address);
         process.invokeClientEvent(cu);
     }
-    @Override
-    public void notify(Events event, CommunicationUnit cu) {
-        switch (event) {
-            case TRANSACTION:
-                serveTransactionEvent(cu);
-                break;
-            case RECEIVE_LEDGER:
-                ledger = cu.getLedger();
-                break;
-            case BLOCK:
-                this.addBlock(cu.getBlock());
-            case REQUEST_LEDGER:
-                sendLedger();
-                break;
-        }
-    }
 
     private void addBlock(Block block){
         try {
-            boolean success = this.ledger.addBlock(block);
+            boolean success = this.ledger.addBlock(block); //TODO
             if(success){
-                this.blockConsumer.StopMiningCurrentBlock(block);
                 this.blockProducer.setInterrupt(block);
+            }
+            if(leader){
+                this.votingSystemLeader.setReceivedBlock(block);
+                votingSystemLeaderThread.interrupt();
             }
         }catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -131,22 +217,20 @@ public class BFTMiner implements Subscription.Subscriber{
 
     private CommunicationUnit broadcastCommUnit(){
         CommunicationUnit cu = new CommunicationUnit();
-        cu.setEvent(BFT_VOTE);
-        cu.setBFTMsg(true);
+        cu.setEvent(BFT_REQUEST_ELECTION);
         cu.setBlock(this.block);
         cu.setSocketPort(this.port);
         cu.setSocketAddress(this.address);
         return cu;
     }
-    private boolean repeatedTransaction(Transaction transaction){
-        for(Transaction t: this.transactions){
-            return true; //TODO check for equality
-        }
-        return false;
+
+    private CommunicationUnit votingBroadcast(){
+        CommunicationUnit cu = new CommunicationUnit();
+        cu.setEvent(BFT_REQUEST_VOTE);
+        cu.setSocketPort(this.port);
+        cu.setSocketAddress(this.address);
+        return cu;
     }
 
-    private void serveTransactionEvent(CommunicationUnit cu){
-        if(!repeatedTransaction(cu.getTransaction()))
-            this.transactions.add(cu.getTransaction());
-    }
+
 }

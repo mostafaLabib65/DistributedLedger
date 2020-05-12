@@ -4,6 +4,8 @@ import DataStructures.Block.Block;
 import DataStructures.Block.BlockHeader;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
+import Utils.BytesConverter;
+import Utils.RSA;
 import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
@@ -12,6 +14,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static network.events.Events.*;
 
@@ -27,31 +30,34 @@ public class POWMiner implements Subscription.Subscriber{
     private int blockSize;
     private ArrayList<Block> readyToMineBlocks = new ArrayList<>();
     private ArrayList<Transaction> transactions = new ArrayList<>();
-    String address;
+    private String address;
     int port;
-
-    public POWMiner(Consensus blockConsumer, int blockSize, String address, int port){
+    private RSA rsa = new RSA(2048);
+    private HashMap<String, Integer> transactionHashToIndex = new HashMap<>();
+    private boolean leader;
+    private Thread blockConsumerThread;
+    private Thread blockProducerThread;
+    public POWMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader){
         this.address = address;
         this.port = port;
         this.blockConsumer = blockConsumer;
         this.blockSize = blockSize;
+        this.leader = leader;
         initializeNetwork();
         initializeSubscriptions();
         initializeBlockProducer();
         initializeBlockConsumer();
-//        initializeGenesisBlock(); //TODO we need to agree
-
     }
 
     private void initializeBlockProducer(){
-        this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize);
-        Thread blockProducerThread = new Thread(this.blockProducer);
+        this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize, rsa, leader, this.blockConsumerThread);
+        this.blockProducerThread = new Thread(this.blockProducer);
         blockProducerThread.start();
     }
 
     private void initializeBlockConsumer(){
-        this.blockConsumer.setParams(this.readyToMineBlocks, this.broadcastCommUnit(), this.process, this.ledger);
-        Thread blockConsumerThread = new Thread(this.blockConsumer);
+        this.blockConsumer.setParams(this.readyToMineBlocks, this.broadcastCommUnit(), this.process, this.ledger, this.transactions);
+        this.blockConsumerThread = new Thread(this.blockConsumer);
         blockConsumerThread.start();
     }
     private void initializeSubscriptions(){
@@ -107,6 +113,8 @@ public class POWMiner implements Subscription.Subscriber{
                 break;
             case BLOCK:
                 this.addBlock(cu.getBlock());
+                break;
+
             case REQUEST_LEDGER:
                 sendLedger();
                 break;
@@ -143,14 +151,28 @@ public class POWMiner implements Subscription.Subscriber{
         return cu;
     }
     private boolean repeatedTransaction(Transaction transaction){
-        for(Transaction t: this.transactions){
-            return true; //TODO check for equality
+        String hash = null;
+        try {
+            hash = BytesConverter.byteToHexString(
+                    transaction.getTransactionHash(),64);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
-        return false;
+        return transactionHashToIndex.containsKey(hash);
     }
 
     private void serveTransactionEvent(CommunicationUnit cu){
-        if(!repeatedTransaction(cu.getTransaction()))
+        if(!repeatedTransaction(cu.getTransaction())){
             this.transactions.add(cu.getTransaction());
+            if(this.transactions.size() == 1){
+                this.blockProducerThread.interrupt();
+            }
+            try {
+                transactionHashToIndex.put(BytesConverter.byteToHexString(
+                        cu.getTransaction().getTransactionHash(),64), this.transactions.size()-1);
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
