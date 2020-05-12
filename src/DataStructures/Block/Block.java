@@ -17,7 +17,7 @@ import java.util.HashMap;
 
 public class Block {
 
-
+    public byte[] hash;
     private BlockHeader header;
     private Transaction[] transactions;
     private MerkleTree merkleTree;
@@ -37,8 +37,9 @@ public class Block {
     }
 
     public  byte[] getMerkleTreeRoot() throws NoSuchAlgorithmException {
-        this.merkleTree.buildTree();
-        return this.merkleTree.getRootHash();
+//        this.merkleTree.buildTree();
+//        return this.merkleTree.getRootHash();
+        return hash;
     }
 
 
