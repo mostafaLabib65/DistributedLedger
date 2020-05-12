@@ -1,12 +1,10 @@
-package Nodes;
+package Nodes.Consensus;
 
 import DataStructures.Block.Block;
-import DataStructures.Ledger.Ledger;
-import DataStructures.Transaction.Transaction;
+import Nodes.Consensus.Consensus;
 import network.Process;
 import network.entities.CommunicationUnit;
-import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
+
 import java.util.ArrayList;
 
 public class BFTBlockConsumer extends Consensus {

@@ -1,4 +1,4 @@
-package Nodes;
+package Nodes.Consensus;
 
 import DataStructures.Block.Block;
 import DataStructures.Ledger.Ledger;
@@ -23,7 +23,5 @@ public abstract class Consensus implements Runnable {
     }
     public void StopMiningCurrentBlock(Block block){
     }
-    public void setAddedBlock(Block block){
 
-    }
 }

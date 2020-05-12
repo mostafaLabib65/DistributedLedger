@@ -1,9 +1,8 @@
-package Nodes;
+package Nodes.MinerUtils;
 
 import DataStructures.Block.Block;
 import network.Process;
 import network.entities.CommunicationUnit;
-import network.events.Events;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;

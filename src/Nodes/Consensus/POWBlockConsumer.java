@@ -1,8 +1,9 @@
-package Nodes;
+package Nodes.Consensus;
 
 import DataStructures.Block.Block;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
+import Nodes.Consensus.Consensus;
 import network.Process;
 import network.entities.CommunicationUnit;
 import java.math.BigInteger;

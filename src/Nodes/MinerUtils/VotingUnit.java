@@ -1,4 +1,4 @@
-package Nodes;
+package Nodes.MinerUtils;
 
 import DataStructures.Block.Block;
 

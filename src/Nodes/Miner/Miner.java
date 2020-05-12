@@ -1,15 +1,17 @@
-package Nodes;
+package Nodes.Miner;
 
 import DataStructures.Block.Block;
-import DataStructures.Block.BlockHeader;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
+import Nodes.MinerUtils.BlockProducer;
+import Nodes.Consensus.Consensus;
 import Utils.BytesConverter;
 import Utils.RSA;
 import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 import network.state.Subscription;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
@@ -18,26 +20,23 @@ import java.util.HashMap;
 
 import static network.events.Events.*;
 
-
-//TODO when to use Block.isValid
-
-public class POWMiner implements Subscription.Subscriber{
-    private Consensus blockConsumer;
-    private BlockProducer blockProducer;
-    private Ledger ledger;
-    private Process process;
-    private Block block;
+public abstract class Miner implements Subscription.Subscriber{
+    protected Consensus blockConsumer;
+    protected BlockProducer blockProducer;
+    protected Ledger ledger;
+    protected Process process;
     private int blockSize;
-    private ArrayList<Block> readyToMineBlocks = new ArrayList<>();
-    private ArrayList<Transaction> transactions = new ArrayList<>();
-    private String address;
-    int port;
+    protected String address;
+    protected int port;
+    protected boolean leader;
     private RSA rsa = new RSA(2048);
     private HashMap<String, Integer> transactionHashToIndex = new HashMap<>();
-    private boolean leader;
-    private Thread blockConsumerThread;
+    protected ArrayList<Block> readyToMineBlocks = new ArrayList<>();
+    protected ArrayList<Transaction> transactions = new ArrayList<>();
+    protected Thread blockConsumerThread;
     private Thread blockProducerThread;
-    public POWMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader){
+
+    public Miner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader){
         this.address = address;
         this.port = port;
         this.blockConsumer = blockConsumer;
@@ -56,7 +55,7 @@ public class POWMiner implements Subscription.Subscriber{
     }
 
     private void initializeBlockConsumer(){
-        this.blockConsumer.setParams(this.readyToMineBlocks, this.broadcastCommUnit(), this.process, this.ledger, this.transactions);
+        this.blockConsumer.setParams(this.readyToMineBlocks, this.broadcastBlockCommUnit(), this.process, this.ledger, this.transactions);
         this.blockConsumerThread = new Thread(this.blockConsumer);
         blockConsumerThread.start();
     }
@@ -72,7 +71,6 @@ public class POWMiner implements Subscription.Subscriber{
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress);
             process.start();
-
             requestLedger();
 
         } catch (UnknownHostException e) {
@@ -81,18 +79,12 @@ public class POWMiner implements Subscription.Subscriber{
 
     }
 
-    private void initializeGenesisBlock(){
-        BlockHeader header = new BlockHeader();
-        header.hashOfPrevBlock = new byte[]{0};
-        this.block = new Block(this.blockSize);
-        block.setHeader(header);
-    }
-
-    private void initializeBlock(){
-        BlockHeader header = new BlockHeader();
-//        header.hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
-        this.block = new Block(this.blockSize);
-        block.setHeader(header);
+    private CommunicationUnit broadcastBlockCommUnit(){
+        CommunicationUnit cu = new CommunicationUnit();
+        cu.setEvent(BLOCK);
+        cu.setSocketPort(this.port);
+        cu.setSocketAddress(this.address);
+        return cu;
     }
 
     private void requestLedger() {
@@ -102,38 +94,8 @@ public class POWMiner implements Subscription.Subscriber{
         cu.setSocketAddress(this.address);
         process.invokeClientEvent(cu);
     }
-    @Override
-    public void notify(Events event, CommunicationUnit cu) {
-        switch (event) {
-            case TRANSACTION:
-                serveTransactionEvent(cu);
-                break;
-            case RECEIVE_LEDGER:
-                ledger = cu.getLedger();
-                break;
-            case BLOCK:
-                this.addBlock(cu.getBlock());
-                break;
 
-            case REQUEST_LEDGER:
-                sendLedger();
-                break;
-        }
-    }
-
-    private void addBlock(Block block){
-        try {
-            boolean success = this.ledger.addBlock(block);
-            if(success){
-                this.blockConsumer.StopMiningCurrentBlock(block);
-                this.blockProducer.setInterrupt(block);
-            }
-        }catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendLedger() {
+    protected void sendLedger() {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(Events.RECEIVE_LEDGER);
         cu.setLedger(ledger);
@@ -142,14 +104,6 @@ public class POWMiner implements Subscription.Subscriber{
         process.invokeClientEvent(cu);
     }
 
-    private CommunicationUnit broadcastCommUnit(){
-        CommunicationUnit cu = new CommunicationUnit();
-        cu.setEvent(BLOCK);
-        cu.setBlock(this.block);
-        cu.setSocketPort(this.port);
-        cu.setSocketAddress(this.address);
-        return cu;
-    }
     private boolean repeatedTransaction(Transaction transaction){
         String hash = null;
         try {
@@ -161,7 +115,7 @@ public class POWMiner implements Subscription.Subscriber{
         return transactionHashToIndex.containsKey(hash);
     }
 
-    private void serveTransactionEvent(CommunicationUnit cu){
+    protected void serveTransactionEvent(CommunicationUnit cu){
         if(!repeatedTransaction(cu.getTransaction())){
             this.transactions.add(cu.getTransaction());
             if(this.transactions.size() == 1){
@@ -175,4 +129,19 @@ public class POWMiner implements Subscription.Subscriber{
             }
         }
     }
+
+    protected void addBlock(Block block){
+        try {
+            boolean success = this.ledger.addBlock(block);
+            if(success){
+                this.blockConsumer.StopMiningCurrentBlock(block);
+                this.blockProducer.setInterrupt(block);
+            }
+        }catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void notify(Events event, CommunicationUnit cu) { }
 }
