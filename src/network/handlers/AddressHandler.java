@@ -25,7 +25,7 @@ public class AddressHandler implements Handler {
 
     private void addClient(CommunicationUnit cu) {
         ActiveClients activeClients = ActiveClients.getActiveClients();
-        activeClients.addClient(cu.getSocketAddress(), cu.getSocketPort());
+        activeClients.addClient(cu.getServerAddress(), cu.getServerPort());
     }
 
     private void initiateNewConnection(CommunicationUnit cu) throws IOException {

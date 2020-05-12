@@ -62,6 +62,8 @@ public class ConnectionInitializer {
             cu.setEvent(Events.ADDRESS);
             cu.setSocketAddress(p.getKey());
             cu.setSocketPort(p.getValue());
+            cu.setServerAddress(process.getAddress());
+            cu.setServerPort(process.getPort());
             process.invokeClientEvent(cu);
         });
     }

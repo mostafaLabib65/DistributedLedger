@@ -19,6 +19,8 @@ public class CommunicationUnit implements Serializable {
     private boolean BFTVote;
     private String hashedPublicKey;
     private List<String> hashedPublicKeys;
+    private String serverAddress;
+    private int serverPort;
 
     public Events getEvent() {
         return event;
@@ -86,5 +88,21 @@ public class CommunicationUnit implements Serializable {
 
     public void setHashedPublicKeys(List<String> hashedPublicKeys) {
         this.hashedPublicKeys = hashedPublicKeys;
+    }
+
+    public String getServerAddress() {
+        return serverAddress;
+    }
+
+    public void setServerAddress(String serverAddress) {
+        this.serverAddress = serverAddress;
+    }
+
+    public int getServerPort() {
+        return serverPort;
+    }
+
+    public void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
     }
 }

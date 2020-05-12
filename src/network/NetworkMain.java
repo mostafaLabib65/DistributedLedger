@@ -2,6 +2,7 @@ package network;
 
 import network.entities.CommunicationUnit;
 import network.events.Events;
+import network.utils.ConnectionInitializer;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -14,8 +15,10 @@ public class NetworkMain {
             int port = 3000;
             InetAddress address = InetAddress.getByName("127.0.0.1");
             Process process = new Process(port, address);
-            process.start();
 
+            process.start();
+            ConnectionInitializer connectionInitializer = new ConnectionInitializer(process);
+            connectionInitializer.init();
             // Initiate initial conditions
             int peerPort = 4000;
             String peerAddress = "192.168.1.2";
