@@ -8,9 +8,6 @@ public enum Events {
 
     // Block Chain
     BLOCK,
-    BFT_RECEIVE_VOTE,
-    BFT_REQUEST_VOTE,
-    BFT_REQUEST_ELECTION,
     REQUEST_LEDGER,
     RECEIVE_LEDGER,
     TRANSACTION,
@@ -18,7 +15,10 @@ public enum Events {
     // Validation
     REQUEST_PUBLICKEYS,
     RECEIVE_PUBLICKEYS,
-    PUBLISH_PUBLICKEY
+    PUBLISH_PUBLICKEY,
 
     // Elections and Consensus
+    BFT_RECEIVE_VOTE,
+    BFT_REQUEST_VOTE,
+    BFT_REQUEST_ELECTION,
 }
