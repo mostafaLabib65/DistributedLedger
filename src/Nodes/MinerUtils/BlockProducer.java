@@ -67,7 +67,7 @@ public class BlockProducer implements Runnable {
                 this.transactionCounter++;
                 if(this.transactionCounter == blockSize-1){
                     try {
-                        Transaction t = f.createRewardTransactionForPublucKey(rsa.getPublicKey(), rsa.getModulus());
+                        Transaction t = f.createRewardTransactionForPublicKey(rsa.getPublicKey(), rsa.getModulus());
                         this.block.getTransactions()[this.transactionCounter] = t;
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();

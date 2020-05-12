@@ -93,6 +93,11 @@ public class Block {
         return TransactionsValidator.validateSetOfTransactions(this.transactions,utxoSet);
 
     }
+    public boolean isValidBlock(UTXOSet utxoSet) throws NoSuchAlgorithmException {
+
+        return TransactionsValidator.validateSetOfTransactions(this.transactions,utxoSet);
+
+    }
 
     public void addTransactionsToUTXOSet(UTXOSet utxoSet, int blockIndex) throws NoSuchAlgorithmException {
         for (int i = 0; i < this.transactions.length; i++) {
