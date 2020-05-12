@@ -8,8 +8,6 @@ import java.util.HashMap;
 
 public class TransientPartitionTree implements Serializable {
 
-
-
     private HashMap<String, BlockNode> hashOfLastBlockinPartition; //TODO DONT FORGET TO UPDATE
     private int currentMaxDepth;
 
@@ -26,13 +24,13 @@ public class TransientPartitionTree implements Serializable {
     }
 
 
-    public boolean addBlock(Block block){
+    public boolean addBlock(Block block) {
         //TODO
         return false;
     }
 
 
-    public int getMaxBranchDepth(){
+    public int getMaxBranchDepth() {
         //TODO
         return 0;
     }
