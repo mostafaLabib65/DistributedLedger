@@ -22,6 +22,12 @@ public class HandlerFactory {
                 return new PublishPublicKeyHandler();
             case RECEIVE_PUBLICKEYS:
                 return new ReceivePublicKeysHandler();
+            case BFT_RECEIVE_VOTE:
+                return new BFTReceiveVoteHandler();
+            case BFT_REQUEST_VOTE:
+                return new BFTRequestVoteHandler();
+            case BFT_REQUEST_ELECTION:
+                return new BFTRequestElectionHandler();
             default:
                 throw new RuntimeException("Missing Handler for event: " + events);
         }
