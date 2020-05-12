@@ -13,11 +13,10 @@ import java.util.ArrayList;
 
 public class LedgerPartition {
 
-    ArrayList<Block> blocks;
-    UTXOSet utxoSet;
-    int currentDifficulty;
-    int startingLedgerIndex;
-
+    private ArrayList<Block> blocks;
+    private UTXOSet utxoSet;
+    private int currentDifficulty;
+    private int startingLedgerIndex;
 
     public LedgerPartition(int start) {
 
@@ -29,27 +28,38 @@ public class LedgerPartition {
         currentDifficulty = 0;
     }
 
-
+    public UTXOSet getUtxoSet() {
+        return utxoSet;
+    }
 
     public boolean addBlock(Block b) throws NoSuchAlgorithmException {
 
-        if(!blocks.isEmpty())
-            if(!(
-                    BytesConverter.byteToHexString(b.getPreviousHash(), 64).equals(
-                    BytesConverter.byteToHexString(blocks.get(blocks.size() - 1).getHash(), 64)
-            ))) return false;
 
-        if(!b.isValidPOWBlock(currentDifficulty, utxoSet)) return false;
-
+        if(!isValidBlockForLedger(b))
+            return false;
         blocks.add(b);
         b.addTransactionsToUTXOSet(utxoSet, startingLedgerIndex + blocks.size() - 1);
         ArrayList<String> usedUTXOs = b.getUsedUTXOs();
         for (int i = 0; i < usedUTXOs.size(); i++) {
             utxoSet.removeUTXOEntry(usedUTXOs.get(i));
         }
-
         return true;
     }
+
+    public boolean isValidBlockForLedger(Block b) throws NoSuchAlgorithmException {
+        if(!blocks.isEmpty())
+            if(!(
+                    BytesConverter.byteToHexString(b.getPreviousHash(), 64).equals(
+                            BytesConverter.byteToHexString(blocks.get(blocks.size() - 1).getHash(), 64)
+                    ))) return false;
+        if(!b.isValidBlock(utxoSet)) return false;
+        return true;
+    }
+
+    public int getDepth() {
+        return blocks.size() + startingLedgerIndex;
+    }
+
 
     public int getSize(){
         return blocks.size();
@@ -215,9 +225,24 @@ public class LedgerPartition {
         System.out.println(partition.addBlock(b3));
         System.out.println(partition.addBlock(b4));
 
+
+
+        Ledger ledger = new Ledger();
+
+
+
+        System.out.println(ledger.addBlock(b1));
+        System.out.println(ledger.addBlock(b2));
+        System.out.println(ledger.addBlock(b3));
+        System.out.println(ledger.addBlock(b4));
+
+
         System.out.println("test");
 
     }
 
 
+    public UTXOEntry[] getUTXOsAvailableForPublicKey(String publicKeyHash) {
+        return utxoSet.getUTXOsAvailableForPublicKey(publicKeyHash).toArray(new UTXOEntry[0]);
+    }
 }

@@ -19,19 +19,27 @@ public class Ledger {
     }
 
     public boolean addBlock(Block block) throws NoSuchAlgorithmException {
-        if(!partitionTree.addBlock(block))
-            return false;
-        if (partitionTree.getMaxBranchDepth() > transientLedgerMaxLength) {
-            Block tmp = partitionTree.removeFirstBlock();
-            baseLedger.addBlock(tmp);
-        }
-        return true;
+//        if(!partitionTree.addBlock(block))
+//            return false;
+//        if (partitionTree.getMaxBranchDepth() > transientLedgerMaxLength) {
+//            Block tmp = partitionTree.removeFirstBlock();
+//            baseLedger.addBlock(tmp);
+//        }
+//        return true;
+        return baseLedger.addBlock(block);
     }
 
     public UTXOEntry[] getAvailableUTXOsForPublicKey(String publicKeyHash) {
 
         //TODO check validity
-        return partitionTree.getLongestBranchUTXOSet();
+//        return partitionTree.getLongestBranchUTXOSet();
+        return baseLedger.getUTXOsAvailableForPublicKey(publicKeyHash);
     }
 
+
+    public int getLegderDepth() {
+
+        //TODO Change
+        return baseLedger.getDepth();
+    }
 }
