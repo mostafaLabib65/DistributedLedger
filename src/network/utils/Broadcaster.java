@@ -18,6 +18,8 @@ public class Broadcaster {
                 Socket socket = new Socket(clientSocket.getKey(), clientSocket.getValue());
                 ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
                 outputStream.writeObject(cu);
+                socket.close();
+                outputStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
