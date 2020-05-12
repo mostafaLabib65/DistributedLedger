@@ -17,16 +17,18 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
-import static network.events.Events.BLOCK;
+import static network.events.Events.*;
 
 public class Client implements Subscription.Subscriber {
+
 
     private int port = 4000;
     private String address = "127.0.0.1";
     private Process process;
-    // Initiate initial conditions
     private int peerPort = 5000;
     private String peerAddress = "192.168.1.2";
 
@@ -34,8 +36,8 @@ public class Client implements Subscription.Subscriber {
     private BigInteger modulus;
     private RSA rsa;
     private Ledger ledger;
-    //TODO add publickeys list
     private List<String> hashedPublicKeys;
+    private Random rand;
 
     public Client() {
         Subscription.getSubscription().subscribe(BLOCK, this);
@@ -44,40 +46,52 @@ public class Client implements Subscription.Subscriber {
         Subscription.getSubscription().subscribe(Events.PUBLISH_PUBLICKEY, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_PUBLICKEYS, this);
         initialize();
+        busyWaiting();
         sendTransactions();
     }
 
+    private void busyWaiting() {
+        while(ledger == null || hashedPublicKeys.isEmpty()) {
+            sleep(100);
+        }
+    }
+
     private void sendTransactions() {
-        int numOfTransactions = 1; //TODO get random number
+        int numOfTransactions = rand.nextInt(5);
+
         for (int i = 0; i < numOfTransactions; i++) {
-            Transaction transaction = createTransaction();
-            sendTransaction(transaction);
-//            sleep(100);
+            if(ledger != null) {
+                Transaction transaction = createTransaction();
+                if (transaction != null)
+                    sendTransaction(transaction);
+            }
+            sleep(100);
         }
 
     }
 
     private Transaction createTransaction() {
-        /*
-        * get random number of utxo entries => represent number of transaction input
-        * get random coin flip for transaction outputs
-        * sum the number of utxos and random for 2 splits if 2 outputs
-        *
-        * get public key using RSA
-        * random pick for reciever
-        * done
-         */
-        int[] numberOfUTXOEntries = {0,1}; //TODO set at random max size below utxoset size
-        int numberOfOutputs = 2; //TODO set at random
 
-        Transaction transaction = new NormalTransaction(numberOfUTXOEntries.length, numberOfOutputs);
-
-        TransactionInput[] transactionInputs = new TransactionInput[numberOfUTXOEntries.length];
         String publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
-        long UTXOSummation = 0;
-        for (int i = 0; i < numberOfUTXOEntries.length; i++) {
 
-            UTXOEntry entry = ledger.getAvailableUTXOsForPublicKey(publicKeyString)[numberOfUTXOEntries[i]];
+        UTXOEntry[] UTXOSet = ledger.getAvailableUTXOsForPublicKey(publicKeyString);
+
+        if(UTXOSet.length == 0) {
+            return null;
+        }
+
+        int numOfUTXOChosen = rand.nextInt(UTXOSet.length);
+
+        int[] numberOfUTXOEntriesChosen = getNumberOfUTXOChosen(UTXOSet.length, numOfUTXOChosen);
+        int numberOfOutputs = rand.nextInt(1) + 1; //number of outputs 1 or 2
+
+        Transaction transaction = new NormalTransaction(numberOfUTXOEntriesChosen.length, numberOfOutputs);
+
+        TransactionInput[] transactionInputs = new TransactionInput[numberOfUTXOEntriesChosen.length];
+        long UTXOSummation = 0;
+        for (int i = 0; i < numberOfUTXOEntriesChosen.length; i++) {
+
+            UTXOEntry entry = UTXOSet[numberOfUTXOEntriesChosen[i]];
             UTXOSummation += entry.transactionOutput.amount;
 
             TransactionInput input = new TransactionInput();
@@ -102,18 +116,45 @@ public class Client implements Subscription.Subscriber {
 
         transaction.setTransactionInputs(transactionInputs);
 
-
-
         TransactionOutput o1 = new TransactionOutput();
-        TransactionOutput o2 = new TransactionOutput(); //TODO perform random split
-        o1.amount = UTXOSummation;
-        o1.publicKeyHash = hashedPublicKeys.get(0).getBytes(); //TODO get random receiver
+        TransactionOutput o2 = new TransactionOutput();
+        int receiverKey = rand.nextInt(hashedPublicKeys.size());
+        if(numberOfOutputs == 1) {
+            o1.amount = UTXOSummation;
+            o1.publicKeyHash = hashedPublicKeys.get(receiverKey).getBytes();
 
-        transaction.setTransactionOutputs(new TransactionOutput[]{o1}); //TODO add o2 if random split
+            transaction.setTransactionOutputs(new TransactionOutput[]{o1});
+
+        } else if (numberOfOutputs == 2) {
+            float randomSplit = rand.nextFloat();
+
+            o1.amount = (long) (UTXOSummation*randomSplit);
+            o1.publicKeyHash = hashedPublicKeys.get(receiverKey).getBytes();
+            o2.amount = (long) (UTXOSummation*(1.0 - randomSplit));
+            o2.publicKeyHash = publicKeyString.getBytes();
+
+            transaction.setTransactionOutputs(new TransactionOutput[]{o1, o2});
+
+        } else {
+            throw new RuntimeException("Incorrect number of outputs");
+        }
+
         return transaction;
     }
 
+    private int[] getNumberOfUTXOChosen(int bound, int sizeOfArray) {
+        return rand.ints(0, bound)
+                .boxed()
+                .distinct()
+                .limit(sizeOfArray)
+                .mapToInt((Integer i) -> i.intValue())
+                .toArray();
+    }
+
     private void initialize() {
+
+        rand = new Random(System.currentTimeMillis());
+
         try {
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress);
@@ -122,16 +163,13 @@ public class Client implements Subscription.Subscriber {
             createKeys();
             sendPublickey();
 
-            request(Events.REQUEST_PUBLICKEYS);
-            request(Events.REQUEST_LEDGER);
-
-        } catch (UnknownHostException | NoSuchAlgorithmException e) {
+        } catch (UnknownHostException e) {
             e.printStackTrace();
         }
 
     }
 
-    private void createKeys() throws NoSuchAlgorithmException {
+    private void createKeys() {
         rsa = new RSA(2048);
         publicKey = rsa.getPublicKey();
         modulus = rsa.getModulus();
@@ -159,7 +197,10 @@ public class Client implements Subscription.Subscriber {
         switch (events) {
             case BLOCK:
                 try {
-                    ledger.addBlock(cu.getBlock()); // TODO handle missing block discrepancy
+                    if(!ledger.addBlock(cu.getBlock())) {
+                        request(Events.REQUEST_PUBLICKEYS);
+                        request(Events.REQUEST_LEDGER);
+                    }
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
                 }
@@ -223,4 +264,23 @@ public class Client implements Subscription.Subscriber {
         cu.setSocketAddress(peerAddress);
         process.invokeClientEvent(cu);
     }
+
+    public static void main(String... args) {
+//        Random random = new Random(0);
+
+//        int[] myArray = random.ints(0, 1)
+//                .boxed()
+//                .distinct()
+//                .limit(1)
+//                .mapToInt( (Integer i) -> i.intValue())
+//                .toArray();
+
+//        System.out.println(Arrays.toString(myArray));
+
+
+
+    }
+
 }
+
+
