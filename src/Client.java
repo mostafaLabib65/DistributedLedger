@@ -1,4 +1,3 @@
-import DataStructures.Block.Block;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Ledger.UTXOEntry;
 import DataStructures.Transaction.NormalTransaction;
@@ -7,6 +6,7 @@ import DataStructures.Transaction.TransactionInput;
 import DataStructures.Transaction.TransactionOutput;
 import Utils.BytesConverter;
 import Utils.RSA;
+import Utils.BytesConverter;
 import Utils.SHA;
 import network.Process;
 import network.entities.CommunicationUnit;
@@ -89,6 +89,17 @@ public class Client implements Subscription.Subscriber {
     }
 
     private Transaction createTransaction() {
+        /*
+        * get random number of utxo entries => represent number of transaction input
+        * get random coin flip for transaction outputs
+        * sum the number of utxos and random for 2 splits if 2 outputs
+        *
+        * get public key using RSA
+        * random pick for reciever
+        * done
+         */
+        int[] numberOfUTXOEntries = {0,1}; //TODO set at random max size below utxoset size
+        int numberOfOutputs = 2; //TODO set at random
 
         String publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
 
@@ -300,5 +311,3 @@ public class Client implements Subscription.Subscriber {
     }
 
 }
-
-
