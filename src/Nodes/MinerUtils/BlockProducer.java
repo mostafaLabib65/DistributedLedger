@@ -1,6 +1,7 @@
 package Nodes.MinerUtils;
 
 import DataStructures.Block.Block;
+import DataStructures.Block.BlockFactory;
 import DataStructures.Block.BlockHeader;
 import DataStructures.Transaction.Transaction;
 import DataStructures.Transaction.TransactionFactory;
@@ -8,6 +9,9 @@ import Utils.RSA;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
+
+import static java.lang.Thread.sleep;
 
 public class BlockProducer implements Runnable {
 
@@ -21,24 +25,29 @@ public class BlockProducer implements Runnable {
     private TransactionFactory f =new TransactionFactory();
     private RSA rsa;
     private Thread blockConsumer;
-    public  BlockProducer(ArrayList<Block> readyToMineBlocks, ArrayList<Transaction> transactions, int blockSize, RSA rsa, boolean leader, Thread blockConsumer){
+    private Block genesisBlock;
+    public  BlockProducer(ArrayList<Block> readyToMineBlocks, ArrayList<Transaction> transactions, int blockSize, RSA rsa, boolean leader, Thread blockConsumer, List<String> hashedPublicKeys, int numOfParticipants){
         this.readyToMineBlocks = readyToMineBlocks;
         this.transactions = transactions;
         this.blockSize = blockSize;
         this.rsa = rsa;
         this.blockConsumer = blockConsumer;
         if(leader){
-            initializeGenesisBlock();
+            BlockFactory factory = new BlockFactory();
+            try {
+                while (hashedPublicKeys.size() != numOfParticipants){
+                    sleep(2);
+                }
+                this.genesisBlock = factory.createGenesisBlock(hashedPublicKeys);
+            } catch (NoSuchAlgorithmException | InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void initializeGenesisBlock(){
-        BlockHeader header = new BlockHeader();
-        header.hashOfPrevBlock = new byte[]{0};
-        this.block = new Block(this.blockSize);
-        block.setHeader(header);
+    public Block getGenesisBlock(){
+        return this.genesisBlock;
     }
-
     private void initializeBlock(){
         BlockHeader header = new BlockHeader();
         header.nonce = -1;

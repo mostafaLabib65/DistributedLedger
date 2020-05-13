@@ -3,17 +3,19 @@ package Nodes.Consensus;
 import DataStructures.Block.Block;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
-import Nodes.Consensus.Consensus;
 import network.Process;
 import network.entities.CommunicationUnit;
+
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
+import static network.events.Events.BLOCK;
+
 public class POWBlockConsumer extends Consensus {
     private int difficulty;
     private ArrayList<Block> blocks;
-    private CommunicationUnit cu;
+    private CommunicationUnit cu = new CommunicationUnit();
     private Process process;
     public POWBlockConsumer(int difficulty){
         this.difficulty = difficulty;
@@ -25,12 +27,12 @@ public class POWBlockConsumer extends Consensus {
     private int nonce;
     private boolean blockCorrupted = false;
     private ArrayList<Transaction> allTransactions;
-    public void setParams(ArrayList<Block> blocks, CommunicationUnit cu, Process process, Ledger ledger, ArrayList<Transaction> transactions){
+    public void setParams(ArrayList<Block> blocks, Process process, Ledger ledger, ArrayList<Transaction> transactions){
         this.blocks = blocks;
-        this.cu = cu;
         this.process = process;
         this.ledger = ledger;
         this.allTransactions = transactions;
+        cu.setEvent(BLOCK);
     }
 
     private boolean isValidPOWBlock(Block block, int difficulty) throws NoSuchAlgorithmException {

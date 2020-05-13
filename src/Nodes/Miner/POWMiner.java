@@ -5,9 +5,11 @@ import network.entities.CommunicationUnit;
 import network.events.Events;
 
 public class POWMiner extends Miner{
-    public POWMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader) {
-        super(blockConsumer, blockSize, address, port, leader);
+    public POWMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants) {
+        super(blockConsumer, blockSize, address, port, leader, numOfParticipants);
     }
+
+
 
     @Override
     public void notify(Events event, CommunicationUnit cu) {
@@ -16,14 +18,31 @@ public class POWMiner extends Miner{
                 serveTransactionEvent(cu);
                 break;
             case RECEIVE_LEDGER:
-                ledger = cu.getLedger();
+                if(cu.getLedger().getLegderDepth() >= ledger.getLegderDepth()){
+                    ledger = cu.getLedger();
+                    this.blockAdderThread.interrupt();
+                }
                 break;
             case BLOCK:
-                this.addBlock(cu.getBlock());
+                this.addBlocksToLedgerQueue.add(cu.getBlock());
+                if(this.addBlocksToLedgerQueue.size() == 1)
+                    this.blockAdderThread.interrupt();
                 break;
 
             case REQUEST_LEDGER:
                 sendLedger();
+                break;
+
+            case PUBLISH_PUBLICKEY:
+                hashedPublicKeys.add(cu.getHashedPublicKey());
+                break;
+
+            case REQUEST_PUBLICKEYS:
+                sendPublickKeys();
+                break;
+
+            case RECEIVE_PUBLICKEYS:
+                hashedPublicKeys = cu.getHashedPublicKeys();
                 break;
         }
     }

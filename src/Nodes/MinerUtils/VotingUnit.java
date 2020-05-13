@@ -2,6 +2,8 @@ package Nodes.MinerUtils;
 
 import DataStructures.Block.Block;
 
+import static Nodes.MinerUtils.Configs.*;
+
 public class VotingUnit {
 
     private Block block;
@@ -13,18 +15,18 @@ public class VotingUnit {
         this.population = population;
     }
 
-    public int addVote(boolean vote){
+    public Configs addVote(boolean vote){
         if(vote){
             posVotes++;
         }else {
             negVotes++;
         }
         if(posVotes > population/2){
-            return 1;
+            return ACCEPTED;
         }else if(negVotes > population/2){
-            return 0;
+            return REJECTED;
         }else {
-            return -1;
+            return NOT_SETTELED;
         }
     }
 

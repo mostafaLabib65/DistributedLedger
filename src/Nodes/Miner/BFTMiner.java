@@ -2,6 +2,7 @@ package Nodes.Miner;
 
 import DataStructures.Block.Block;
 import Nodes.Consensus.Consensus;
+import Nodes.MinerUtils.Configs;
 import Nodes.MinerUtils.VotingSystemLeader;
 import Nodes.MinerUtils.VotingUnit;
 import network.entities.CommunicationUnit;
@@ -17,19 +18,19 @@ public class BFTMiner extends Miner{
     private Thread votingSystemLeaderThread;
     private VotingSystemLeader votingSystemLeader;
     private ArrayList<Block> votingBlocksQueue = new ArrayList<>();
-    private int numOfParticipants;
     private VotingUnit votingUnit;
 
     public BFTMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants) {
-        super(blockConsumer, blockSize, address, port, leader);
-        this.numOfParticipants = numOfParticipants;
+        super(blockConsumer, blockSize, address, port, leader, numOfParticipants);
         initializeSubscriptions();
         initializeBlockConsumer();
         if(leader)
             initializeBlockVotingSystem();
     }
+
+
     private void initializeBlockConsumer(){
-        this.blockConsumer.setParams(this.readyToMineBlocks, this.broadcastBlockCommUnit(), this.process);
+        this.blockConsumer.setParams(this.readyToMineBlocks, this.process);
         this.blockConsumerThread = new Thread(this.blockConsumer);
         blockConsumerThread.start();
     }
@@ -48,42 +49,30 @@ public class BFTMiner extends Miner{
     private CommunicationUnit votingBroadcast(){
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(BFT_REQUEST_VOTE);
-        cu.setSocketPort(this.port);
-        cu.setSocketAddress(this.address);
         return cu;
     }
     private CommunicationUnit broadcastBlockCommUnit(){
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(BFT_REQUEST_ELECTION);
-        cu.setSocketPort(this.port);
-        cu.setSocketAddress(this.address);
         return cu;
     }
 
-    protected void addBlock(Block block){
-        try {
-            boolean success = this.ledger.addBlock(block); //TODO
-            if(success){
-                this.blockProducer.setInterrupt(block);
+    protected void addBlockToQueue(Configs result){
+        if(result == Configs.ACCEPTED){
+            this.addBlocksToLedgerQueue.add(votingUnit.getBlock());
+            if(this.addBlocksToLedgerQueue.size() == 1){
+                this.blockAdderThread.interrupt();
             }
-            if(leader){
-                this.votingSystemLeader.setReceivedBlock(block);
-                votingSystemLeaderThread.interrupt();
-            }
-        }catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        }else if(result == Configs.REJECTED && leader){
+            this.votingSystemLeader.setReceivedBlock(votingUnit.getBlock());
+            votingSystemLeaderThread.interrupt();
         }
     }
 
     private void receive_vote(boolean vote){
         if(votingUnit != null){
-            int result = votingUnit.addVote(vote);
-            if(result == 1){
-                addBlock(votingUnit.getBlock());
-            }else if(result == 0 && leader){
-                this.votingSystemLeader.setReceivedBlock(votingUnit.getBlock());
-                votingSystemLeaderThread.interrupt();
-            }
+            Configs result = votingUnit.addVote(vote);
+            addBlockToQueue(result);
         }
     }
 
@@ -91,14 +80,15 @@ public class BFTMiner extends Miner{
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(BFT_RECEIVE_VOTE);
         votingUnit = new VotingUnit(block, numOfParticipants);
-        int result = votingUnit.addVote(true);  //TODO this.leader.canBeAdded(block)
-        if(result == 1){
-            addBlock(block);
+        try {
+            boolean canBeAdded = ledger.isValidBlockForLedger(block);
+            Configs result = votingUnit.addVote(canBeAdded);
+            cu.setBFTVote(canBeAdded);
+            process.invokeClientEvent(cu);
+            addBlockToQueue(result);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
-        cu.setBFTVote(true); //TODO this.leader.canBeAdded(block)
-        cu.setSocketPort(this.port);
-        cu.setSocketAddress(this.address);
-        process.invokeClientEvent(cu);
     }
 
     @Override
@@ -123,11 +113,26 @@ public class BFTMiner extends Miner{
                 break;
 
             case RECEIVE_LEDGER:
-                ledger = cu.getLedger(); //TODO check what to accept
+                if(cu.getLedger().getLegderDepth() >= ledger.getLegderDepth()){
+                    ledger = cu.getLedger();
+                    this.blockAdderThread.interrupt();
+                }
                 break;
 
             case REQUEST_LEDGER:
                 sendLedger();
+                break;
+
+            case PUBLISH_PUBLICKEY:
+                hashedPublicKeys.add(cu.getHashedPublicKey());
+                break;
+
+            case REQUEST_PUBLICKEYS:
+                sendPublickKeys();
+                break;
+
+            case RECEIVE_PUBLICKEYS:
+                hashedPublicKeys = cu.getHashedPublicKeys();
                 break;
         }
     }

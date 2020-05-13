@@ -1,24 +1,25 @@
 package Nodes.Consensus;
 
 import DataStructures.Block.Block;
-import Nodes.Consensus.Consensus;
 import network.Process;
 import network.entities.CommunicationUnit;
 
 import java.util.ArrayList;
 
+import static network.events.Events.BFT_REQUEST_ELECTION;
+
 public class BFTBlockConsumer extends Consensus {
     private ArrayList<Block> blocks;
-    private CommunicationUnit cu;
+    private CommunicationUnit cu = new CommunicationUnit();
     private Process process;
 
     public BFTBlockConsumer(){
 
     }
 
-    public void setParams(ArrayList<Block> blocks, CommunicationUnit cu, Process process){
+    public void setParams(ArrayList<Block> blocks, Process process){
         this.blocks = blocks;
-        this.cu = cu;
+        cu.setEvent(BFT_REQUEST_ELECTION);
         this.process = process;
     }
 
