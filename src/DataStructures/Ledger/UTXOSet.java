@@ -87,10 +87,10 @@ public class UTXOSet implements Cloneable, Serializable {
 
     public UTXOSet clone() throws CloneNotSupportedException {
         UTXOSet utxoSet = (UTXOSet) super.clone();
-        utxoSet.availableUTXOsForPublicKey = (HashMap<String, ArrayList<UTXOEntry>>)
-                this.availableUTXOsForPublicKey.clone();
         utxoSet.transactionHashToBlockAndTxIndex = (HashMap<String, UTXOEntry>)
                 this.transactionHashToBlockAndTxIndex.clone();
+        utxoSet.availableUTXOsForPublicKey = (HashMap<String, ArrayList<UTXOEntry>>)
+                this.availableUTXOsForPublicKey.clone();
         return utxoSet;
     }
 
