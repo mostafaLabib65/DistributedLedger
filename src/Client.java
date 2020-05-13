@@ -47,6 +47,7 @@ public class Client implements Subscription.Subscriber {
         Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
         Subscription.getSubscription().subscribe(Events.PUBLISH_PUBLICKEY, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_PUBLICKEYS, this);
+        Subscription.getSubscription().subscribe(Events.RECEIVE_PUBLICKEYS, this);
         initialize();
         initializeBlockAdderToLedgerService();
 //        busyWaiting();
@@ -72,7 +73,7 @@ public class Client implements Subscription.Subscriber {
                 if (transaction != null)
                     sendTransaction(transaction);
             }
-            sleep(100);
+//            sleep(100);
         }
 
     }
