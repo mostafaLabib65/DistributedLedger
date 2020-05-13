@@ -42,6 +42,12 @@ public class Ledger {
         //TODO Change
         return baseLedger.getDepth();
     }
+
+    public byte[] getLastBlockHash() throws NoSuchAlgorithmException {
+        return baseLedger.getLastBlockHash();
+    }
+
+
     public boolean isValidBlockForLedger(Block b) throws NoSuchAlgorithmException {
         return this.baseLedger.isValidBlockForLedger(b);
     }

@@ -245,4 +245,9 @@ public class LedgerPartition {
     public UTXOEntry[] getUTXOsAvailableForPublicKey(String publicKeyHash) {
         return utxoSet.getUTXOsAvailableForPublicKey(publicKeyHash).toArray(new UTXOEntry[0]);
     }
+
+    public byte[] getLastBlockHash() throws NoSuchAlgorithmException {
+
+        return blocks.get(blocks.size() - 1).getHash();
+    }
 }
