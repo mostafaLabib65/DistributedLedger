@@ -20,6 +20,7 @@ import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import static network.events.Events.*;
@@ -38,7 +39,7 @@ public abstract class Miner implements Subscription.Subscriber{
     private BigInteger publicKey = rsa.getPublicKey();
     private BigInteger modulus = rsa.getModulus();
     private HashMap<String, Integer> transactionHashToIndex = new HashMap<>();
-    protected List<String> hashedPublicKeys;
+    protected List<String> hashedPublicKeys = new LinkedList<>();
     protected ArrayList<Block> readyToMineBlocks = new ArrayList<>();
     protected ArrayList<Transaction> transactions = new ArrayList<>();
     protected Thread blockConsumerThread;
