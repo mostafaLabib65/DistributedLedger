@@ -1,11 +1,12 @@
+import DataStructures.Block.Block;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Ledger.UTXOEntry;
 import DataStructures.Transaction.NormalTransaction;
 import DataStructures.Transaction.Transaction;
 import DataStructures.Transaction.TransactionInput;
 import DataStructures.Transaction.TransactionOutput;
-import Utils.RSA;
 import Utils.BytesConverter;
+import Utils.RSA;
 import Utils.SHA;
 import network.Process;
 import network.entities.CommunicationUnit;
@@ -15,22 +16,22 @@ import network.state.Subscription;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.*;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import static network.events.Events.*;
+import static network.events.Events.BLOCK;
 
 public class Client implements Subscription.Subscriber {
 
 
-    private int port = 4000;
-    private String address = "127.0.0.1";
+    private int port;
     private Process process;
-    private int peerPort = 5000;
-    private String peerAddress = "192.168.1.2";
+
+    private ClientBlockAdder blockAdder;
+    private Thread blockAdderThread;
+    protected ArrayList<Block> addBlocksToLedgerQueue = new ArrayList<>();
 
     private BigInteger publicKey;
     private BigInteger modulus;
@@ -39,21 +40,27 @@ public class Client implements Subscription.Subscriber {
     private List<String> hashedPublicKeys;
     private Random rand;
 
-    public Client() {
+    public Client(int port) {
+        this.port = port;
         Subscription.getSubscription().subscribe(BLOCK, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
         Subscription.getSubscription().subscribe(Events.PUBLISH_PUBLICKEY, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_PUBLICKEYS, this);
         initialize();
-        busyWaiting();
+        initializeBlockAdderToLedgerService();
+//        busyWaiting();
         sendTransactions();
     }
-
+    private void initializeBlockAdderToLedgerService(){
+        this.blockAdder = new ClientBlockAdder(this.addBlocksToLedgerQueue, this.ledger, this.process);
+        this.blockAdderThread = new Thread(this.blockAdder);
+        this.blockAdderThread.start();
+    }
     private void busyWaiting() {
-        while(ledger == null || hashedPublicKeys.isEmpty()) {
-            sleep(100);
-        }
+        sleep(1000000);
+        request(Events.REQUEST_LEDGER);
+        request(Events.REQUEST_PUBLICKEYS);
     }
 
     private void sendTransactions() {
@@ -156,6 +163,7 @@ public class Client implements Subscription.Subscriber {
         rand = new Random(System.currentTimeMillis());
 
         try {
+            String address = "127.0.0.1";
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress);
             process.start();
@@ -178,8 +186,7 @@ public class Client implements Subscription.Subscriber {
     private void request(Events event) {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(event);
-        cu.setSocketPort(peerPort);
-        cu.setSocketAddress(peerAddress);
+
         process.invokeClientEvent(cu);
     }
 
@@ -187,8 +194,7 @@ public class Client implements Subscription.Subscriber {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(Events.TRANSACTION);
         cu.setTransaction(transaction);
-        cu.setSocketPort(peerPort);
-        cu.setSocketAddress(peerAddress);
+
         process.invokeClientEvent(cu);
     }
 
@@ -196,20 +202,22 @@ public class Client implements Subscription.Subscriber {
     public void notify(Events events, CommunicationUnit cu) {
         switch (events) {
             case BLOCK:
-                try {
-                    if(!ledger.addBlock(cu.getBlock())) {
-                        request(Events.REQUEST_PUBLICKEYS);
-                        request(Events.REQUEST_LEDGER);
-                    }
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
+                if(ledger != null && !hashedPublicKeys.isEmpty()){
+                    this.addBlocksToLedgerQueue.add(cu.getBlock());
+                    if(this.addBlocksToLedgerQueue.size() == 1)
+                        this.blockAdderThread.interrupt();
                 }
                 break;
             case RECEIVE_LEDGER:
-                ledger = cu.getLedger();
+                if(cu.getLedger().getLegderDepth() >= ledger.getLegderDepth()){
+                    ledger = cu.getLedger();
+                    this.blockAdderThread.interrupt();
+                }
                 break;
             case REQUEST_LEDGER:
-                sendLedger();
+                if(ledger != null && !hashedPublicKeys.isEmpty()){
+                    sendLedger();
+                }
                 break;
             case PUBLISH_PUBLICKEY:
                 hashedPublicKeys.add(cu.getHashedPublicKey());
@@ -227,8 +235,7 @@ public class Client implements Subscription.Subscriber {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(Events.RECEIVE_PUBLICKEYS);
         cu.setHashedPublicKeys(hashedPublicKeys);
-        cu.setSocketPort(peerPort);
-        cu.setSocketAddress(peerAddress);
+
         process.invokeClientEvent(cu);
     }
 
@@ -236,13 +243,12 @@ public class Client implements Subscription.Subscriber {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(Events.RECEIVE_LEDGER);
         cu.setLedger(ledger);
-        cu.setSocketPort(peerPort);
-        cu.setSocketAddress(peerAddress);
+
         process.invokeClientEvent(cu);
     }
 
     private void sleep(int time) {
-        sleep(time);
+        sleep(1000000);
         request(Events.REQUEST_LEDGER);
         request(Events.REQUEST_PUBLICKEYS);
     }
@@ -260,8 +266,7 @@ public class Client implements Subscription.Subscriber {
             e.printStackTrace();
         }
         cu.setHashedPublicKey(BytesConverter.byteToHexString(pkHash, 64));
-        cu.setSocketPort(peerPort);
-        cu.setSocketAddress(peerAddress);
+
         process.invokeClientEvent(cu);
     }
 
