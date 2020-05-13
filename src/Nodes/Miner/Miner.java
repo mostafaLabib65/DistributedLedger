@@ -43,7 +43,7 @@ public abstract class Miner implements Subscription.Subscriber{
     protected ArrayList<Block> readyToMineBlocks = new ArrayList<>();
     protected ArrayList<Transaction> transactions = new ArrayList<>();
     protected Thread blockConsumerThread;
-    private Thread blockProducerThread;
+    protected Thread blockProducerThread;
     protected Thread blockAdderThread;
     protected int numOfParticipants;
     protected ArrayList<Block> addBlocksToLedgerQueue = new ArrayList<>();
@@ -56,45 +56,52 @@ public abstract class Miner implements Subscription.Subscriber{
         this.numOfParticipants = numOfParticipants;
         initializeNetwork();
         initializeSubscriptions();
+        if(leader){
+            request(REQUEST_PUBLICKEYS);
+            ledger = new Ledger();
+        }
         initializeBlockProducerService();
         initializeBlockConsumerService();
         initializeBlockAdderToLedgerService();
         sendPublickey();
-        if(leader){
-            request(REQUEST_PUBLICKEYS);
-        }
     }
 
     private void initializeBlockAdderToLedgerService(){
+        System.out.println("Init Block Adder Service");
         this.blockAdder = new BlockAdder(this.addBlocksToLedgerQueue, this.blockConsumer, this.blockProducer, this.ledger, this.process);
         this.blockAdderThread = new Thread(this.blockAdder);
         this.blockAdderThread.start();
     }
 
     private void initializeBlockProducerService(){
-        this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize, rsa, leader, this.blockConsumerThread, this.hashedPublicKeys, this.numOfParticipants);
-        try {
-            ledger.addBlock(blockProducer.getGenesisBlock());
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
+        System.out.println("Init Block Producer Service");
+        this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize,
+                rsa, leader, this.blockConsumerThread,
+                this.hashedPublicKeys, this.numOfParticipants, this.ledger, this.process);
         sendLedger();
         this.blockProducerThread = new Thread(this.blockProducer);
         blockProducerThread.start();
     }
 
     private void initializeBlockConsumerService(){
+        System.out.println("Init Block Consumer Service");
         this.blockConsumer.setParams(this.readyToMineBlocks, this.process, this.ledger, this.transactions);
         this.blockConsumerThread = new Thread(this.blockConsumer);
         blockConsumerThread.start();
     }
     private void initializeSubscriptions(){
+        System.out.println("Init Subscriptions");
         Subscription.getSubscription().subscribe(Events.TRANSACTION, this);
         Subscription.getSubscription().subscribe(REQUEST_LEDGER, this);
         Subscription.getSubscription().subscribe(RECEIVE_LEDGER, this);
         Subscription.getSubscription().subscribe(BLOCK, this);
+        Subscription.getSubscription().subscribe(Events.PUBLISH_PUBLICKEY, this);
+        Subscription.getSubscription().subscribe(Events.REQUEST_PUBLICKEYS, this);
+        Subscription.getSubscription().subscribe(Events.RECEIVE_PUBLICKEYS, this);
+
     }
     private void initializeNetwork() {
+        System.out.println("Init the network");
         try {
 
             InetAddress inetAddress = InetAddress.getByName(address);

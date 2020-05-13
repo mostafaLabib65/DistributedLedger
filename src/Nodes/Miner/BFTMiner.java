@@ -30,7 +30,7 @@ public class BFTMiner extends Miner{
 
 
     private void initializeBlockConsumer(){
-        this.blockConsumer.setParams(this.readyToMineBlocks, this.process);
+        this.blockConsumer.setParams(this.readyToMineBlocks, this.process, this.ledger);
         this.blockConsumerThread = new Thread(this.blockConsumer);
         blockConsumerThread.start();
     }

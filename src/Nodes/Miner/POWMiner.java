@@ -43,6 +43,8 @@ public class POWMiner extends Miner{
 
             case RECEIVE_PUBLICKEYS:
                 hashedPublicKeys = cu.getHashedPublicKeys();
+                if(hashedPublicKeys.size() == numOfParticipants)
+                    this.blockProducerThread.interrupt();
                 break;
         }
     }

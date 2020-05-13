@@ -3,15 +3,17 @@ package Nodes.MinerUtils;
 import DataStructures.Block.Block;
 import DataStructures.Block.BlockFactory;
 import DataStructures.Block.BlockHeader;
+import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
 import DataStructures.Transaction.TransactionFactory;
 import Utils.RSA;
+import network.Process;
+import network.entities.CommunicationUnit;
+import network.events.Events;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.lang.Thread.sleep;
 
 public class BlockProducer implements Runnable {
 
@@ -26,28 +28,26 @@ public class BlockProducer implements Runnable {
     private RSA rsa;
     private Thread blockConsumer;
     private Block genesisBlock;
-    public  BlockProducer(ArrayList<Block> readyToMineBlocks, ArrayList<Transaction> transactions, int blockSize, RSA rsa, boolean leader, Thread blockConsumer, List<String> hashedPublicKeys, int numOfParticipants){
+    private boolean leader;
+    private int numOfParticipants;
+    private List<String> hashedPublicKeys;
+    private Ledger ledger;
+    private Process process;
+    public  BlockProducer(ArrayList<Block> readyToMineBlocks, ArrayList<Transaction> transactions,
+                          int blockSize, RSA rsa, boolean leader, Thread blockConsumer, List<String> hashedPublicKeys,
+                          int numOfParticipants, Ledger ledger, Process process){
         this.readyToMineBlocks = readyToMineBlocks;
         this.transactions = transactions;
         this.blockSize = blockSize;
         this.rsa = rsa;
         this.blockConsumer = blockConsumer;
-        if(leader){
-            BlockFactory factory = new BlockFactory();
-            try {
-                while (hashedPublicKeys.size() != numOfParticipants){
-                    sleep(2);
-                }
-                this.genesisBlock = factory.createGenesisBlock(hashedPublicKeys);
-            } catch (NoSuchAlgorithmException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        this.leader = leader;
+        this.numOfParticipants = numOfParticipants;
+        this.hashedPublicKeys = hashedPublicKeys;
+        this.ledger = ledger;
+        this.process = process;
     }
 
-    public Block getGenesisBlock(){
-        return this.genesisBlock;
-    }
     private void initializeBlock(){
         BlockHeader header = new BlockHeader();
         header.nonce = -1;
@@ -58,18 +58,38 @@ public class BlockProducer implements Runnable {
         this.interrupted = true;
         this.receivedBlock = receivedBlock;
     }
-
+    protected void sendLedger() {
+        CommunicationUnit cu = new CommunicationUnit();
+        cu.setEvent(Events.RECEIVE_LEDGER);
+        cu.setLedger(ledger);
+        process.invokeClientEvent(cu);
+    }
     @Override
     public void run() {
-        while (true){
-            synchronized (this){
+        synchronized (this){
+            if(leader){
+                BlockFactory factory = new BlockFactory();
+                try {
+                    if (hashedPublicKeys.size() != numOfParticipants){
+                        System.out.println("Waiting for hash keys");
+                        wait();
+                    }
+                    this.genesisBlock = factory.createGenesisBlock(hashedPublicKeys);
+                    this.ledger.addBlock(this.genesisBlock);
+                    this.sendLedger();
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e){
+                    System.out.println("Hash keys received");
+                }
+            }
+            while (true){
                 while (transactions.size() == 0) {
                     try {
                         System.out.println("Block producer: Waiting for transactions");
                         wait();
                     } catch (InterruptedException e) {
                         System.out.println("Block producer: transaction received start working....");
-                        e.printStackTrace();
                     }
                 }
                 Transaction temp = this.transactions.get(0);
@@ -93,7 +113,6 @@ public class BlockProducer implements Runnable {
                     if(readyToMineBlocks.size() == 1){
                         blockConsumer.interrupt();
                     }
-                    notify();
                     this.initializeBlock();
                 }
                 if(this.interrupted){

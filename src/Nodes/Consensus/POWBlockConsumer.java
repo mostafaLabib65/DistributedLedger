@@ -63,7 +63,7 @@ public class POWBlockConsumer extends Consensus {
                     if(blockCorrupted){
                         this.currentMiningBlock = this.blocks.get(0);
                         this.blocks.remove(currentMiningBlock);
-                        currentMiningBlock.getHeader().hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
+                        currentMiningBlock.getHeader().hashOfPrevBlock = this.ledger.getLastBlockHash();
                         nonce = 0;
                     }
                     this.interrupt = false;

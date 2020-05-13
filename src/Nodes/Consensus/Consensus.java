@@ -18,7 +18,7 @@ public abstract class Consensus implements Runnable {
     public void setParams(ArrayList<Block> blocks, Process process, Ledger ledger, ArrayList<Transaction> transactions){
 
     }
-    public void setParams(ArrayList<Block> blocks, Process process){
+    public void setParams(ArrayList<Block> blocks, Process process, Ledger ledger){
 
     }
     public void StopMiningCurrentBlock(Block block){
