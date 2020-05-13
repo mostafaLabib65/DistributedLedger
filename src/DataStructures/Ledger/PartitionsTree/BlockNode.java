@@ -26,13 +26,17 @@ public class BlockNode implements Serializable {
         this.block = block;
         this.height = 0;
         this.children = new ArrayList<>();
+        this.utxoSet = new UTXOSet();
+        this.utxoSet.addTransactionsToUTXOSet(this.block.getTransactions(), 0);
     }
 
-    public BlockNode(Block block, BlockNode parent) {
+    public BlockNode(Block block, BlockNode parent) throws CloneNotSupportedException, NoSuchAlgorithmException {
         this.block = block;
         this.parent = parent;
         this.height = parent.height + 1;
         this.children = new ArrayList<>();
+        this.utxoSet = parent.getUtxoSet().clone();
+        this.utxoSet.addTransactionsToUTXOSet(this.block.getTransactions(), height);
     }
 
     public void setBlock(Block block) {
@@ -75,7 +79,7 @@ public class BlockNode implements Serializable {
         this.utxoSet = utxoSet;
     }
 
-    public BlockNode addNode(Block block) {
+    public BlockNode addNode(Block block) throws NoSuchAlgorithmException, CloneNotSupportedException {
         BlockNode node = new BlockNode(block, this);
         this.children.add(node);
         return node;

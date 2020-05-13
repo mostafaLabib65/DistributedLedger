@@ -2,16 +2,19 @@ package DataStructures.Ledger;
 
 import DataStructures.Transaction.Transaction;
 import Utils.BytesConverter;
+import Utils.SHA;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class UTXOSet implements Serializable {
+import java.security.NoSuchAlgorithmException;
+
+public class UTXOSet implements Cloneable, Serializable {
 
 
-    private HashMap<String,UTXOEntry> transactionHashToBlockAndTxIndex;
-    private HashMap<String,ArrayList<UTXOEntry>> availableUTXOsForPublicKey;
+    private HashMap<String, UTXOEntry> transactionHashToBlockAndTxIndex;
+    private HashMap<String, ArrayList<UTXOEntry>> availableUTXOsForPublicKey;
 
 
     public UTXOSet() {
@@ -32,19 +35,20 @@ public class UTXOSet implements Serializable {
 
         transactionHashToBlockAndTxIndex.put(key, entry);
         String publicKeyHash = BytesConverter.byteToHexString(entry.transactionOutput.publicKeyHash, 64);
-        if(!availableUTXOsForPublicKey.containsKey(publicKeyHash))
+        if (!availableUTXOsForPublicKey.containsKey(publicKeyHash))
             availableUTXOsForPublicKey.put(publicKeyHash, new ArrayList<>());
         availableUTXOsForPublicKey.get(publicKeyHash).add(entry);
 
     }
+
     public void removeUTXOEntry(String hash) {
 
         UTXOEntry entry = transactionHashToBlockAndTxIndex.get(hash);
         String publicKeyHash = BytesConverter.byteToHexString(entry.transactionOutput.publicKeyHash, 64);
         ArrayList<UTXOEntry> tmp = availableUTXOsForPublicKey.get(publicKeyHash);
-        if(tmp.contains(entry))
+        if (tmp.contains(entry))
             tmp.remove(entry);
-        if(tmp.isEmpty())
+        if (tmp.isEmpty())
             availableUTXOsForPublicKey.remove(publicKeyHash);
 
         transactionHashToBlockAndTxIndex.remove(hash);
@@ -57,6 +61,38 @@ public class UTXOSet implements Serializable {
         return availableUTXOsForPublicKey.get(hash);
     }
 
+
+    public void addTransactionsToUTXOSet(Transaction[] transactions, int blockIndex) throws NoSuchAlgorithmException {
+        for (int i = 0; i < transactions.length; i++) {
+            byte[] hash = transactions[i].getTransactionHash();
+
+            for (int j = 0; j < transactions[i].getTransactionOutputs().length; j++) {
+                ArrayList<byte[]> hashAndIndex = new ArrayList<>();
+                byte[] index = BytesConverter.intToBytes(j);
+                hashAndIndex.add(hash);
+                hashAndIndex.add(index);
+                byte[] keyBytes = BytesConverter.concatenateByteArrays(hashAndIndex);
+                String key = BytesConverter.byteToHexString(SHA.getSHA(keyBytes), 64);
+                UTXOEntry entry = new UTXOEntry();
+                entry.transaction = transactions[i];
+                entry.blockIndex = blockIndex;
+                entry.transactionIndex = i;
+
+                entry.transactionOutput = transactions[i].getTransactionOutputs()[j];
+                entry.outputIndex = j;
+                this.addUTXOEntry(key, entry);
+            }
+        }
+    }
+
+    public UTXOSet clone() throws CloneNotSupportedException {
+        UTXOSet utxoSet = (UTXOSet) super.clone();
+        utxoSet.availableUTXOsForPublicKey = (HashMap<String, ArrayList<UTXOEntry>>)
+                this.availableUTXOsForPublicKey.clone();
+        utxoSet.transactionHashToBlockAndTxIndex = (HashMap<String, UTXOEntry>)
+                this.transactionHashToBlockAndTxIndex.clone();
+        return utxoSet;
+    }
 
 
 }
