@@ -42,4 +42,7 @@ public class Ledger {
         //TODO Change
         return baseLedger.getDepth();
     }
+    public boolean isValidBlockForLedger(Block b) throws NoSuchAlgorithmException {
+        return this.baseLedger.isValidBlockForLedger(b);
+    }
 }
