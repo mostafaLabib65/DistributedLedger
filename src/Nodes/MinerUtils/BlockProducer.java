@@ -65,8 +65,10 @@ public class BlockProducer implements Runnable {
             synchronized (this){
                 while (transactions.size() == 0) {
                     try {
+                        System.out.println("Block producer: Waiting for transactions");
                         wait();
                     } catch (InterruptedException e) {
+                        System.out.println("Block producer: transaction received start working....");
                         e.printStackTrace();
                     }
                 }

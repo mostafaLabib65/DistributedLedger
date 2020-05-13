@@ -32,8 +32,10 @@ public class VotingSystemLeader implements Runnable  {
             synchronized (this){
                 while (readyForVotingBlocks.size() == 0 && !waitingForResult){
                     try {
+                        System.out.println("Voting System: Waiting for a block");
                         wait();
                     } catch (InterruptedException e) {
+                        System.out.println("Voting System: Block received");
                         e.printStackTrace();
                     }
                 }
@@ -45,11 +47,15 @@ public class VotingSystemLeader implements Runnable  {
                     waitingForResult = true;
                 }
                 try {
+                    System.out.println("Voting System: Waiting for a Voting result");
                     wait();
                 } catch (InterruptedException e) {
                     try {
                         if(b.getHash() == receivedBlock.getHash()){
+                            System.out.println("Voting System: Voting finished");
                             waitingForResult = false;
+                        }else {
+                            System.out.println("Voting System: Vote received but not settled yet");
                         }
                     } catch (NoSuchAlgorithmException ex) {
                         ex.printStackTrace();

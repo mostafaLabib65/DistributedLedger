@@ -29,9 +29,10 @@ public class BFTBlockConsumer extends Consensus {
             synchronized (this){
                 while (this.blocks.size() == 0) {
                     try {
+                        System.out.println("BFT Consensus: Waiting for a block");
                         wait();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        System.out.println("BFT Consensus: Block received start working...");
                     }
                 }
                 Block currentMiningBlock = this.blocks.get(0);
@@ -39,9 +40,10 @@ public class BFTBlockConsumer extends Consensus {
                 currentMiningBlock.getHeader().hashOfPrevBlock = null;// = this.ledger.getLastBlockHash(); // TODO Correct it
                 this.process.invokeClientEvent(cu);
                 try {
+                    System.out.println("BFT Consensus: Waiting for vote to finish...");
                     wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    System.out.println("BFT Consensus: Vote finished");
                 }
 
             }

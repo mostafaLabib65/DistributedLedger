@@ -35,6 +35,8 @@ public class BlockAdder implements Runnable{
             synchronized (this){
                 if(addBlocksToLedgerQueue.size() == 0) {
                     try {
+                        System.out.println("BlockAdderThread: Waiting for blocks");
+
                         wait();
                     } catch (InterruptedException e) {
                         System.out.println("BlockAdderThread: Block received start adding to ledger");

@@ -53,9 +53,10 @@ public class POWBlockConsumer extends Consensus {
             synchronized (this){
                 while (this.blocks.size() == 0) {
                     try {
+                        System.out.println("POW Consensus: Waiting for new blocks");
                         wait();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        System.out.println("POW Consensus: Block received start working....");
                     }
                 }
                 try {
