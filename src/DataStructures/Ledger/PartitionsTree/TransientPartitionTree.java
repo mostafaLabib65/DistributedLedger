@@ -27,15 +27,20 @@ public class TransientPartitionTree implements Serializable {
 
     public Block removeFirstBlock() {
         Block rootBlock = root.getBlock();
-        root = this.getNextCandidateNodeFromRoot(root, longestLeaf);
+        BlockNode candidateNode = this.getNextCandidateNodeFromRoot(root, longestLeaf);
+        root.removeChild(candidateNode);
+        candidateNode.setParent(null);
+        Thread pruner = new Thread(new TreePruner(root, nodes));
+        pruner.start();
+        root = candidateNode;
         return rootBlock;
     }
 
 
     public boolean addBlock(Block block) {
         try {
-            String parentHash = BytesConverter.byteToHexString(block.getHeader().getHashOfPrevBlock(), 64);
             String nodeHash = BytesConverter.byteToHexString(block.getMerkleTreeRoot(), 64);
+            String parentHash = BytesConverter.byteToHexString(block.getPreviousHash(), 64);
             if (root == null) {
                 root = new BlockNode(block);
                 longestLeaf = root;
@@ -44,6 +49,9 @@ public class TransientPartitionTree implements Serializable {
             } else {
                 if (nodes.containsKey(parentHash)) {
                     BlockNode parent = nodes.get(parentHash);
+                    if (!block.isValidBlock(parent.getUtxoSet()))
+                        return false;
+
                     BlockNode node = parent.addNode(block);
                     nodes.put(nodeHash, node);
                     updateLongestLeaf(node);
@@ -86,9 +94,39 @@ public class TransientPartitionTree implements Serializable {
         return currentNode;
     }
 
+    /**
+     * Simple thread process to prune not needed nodes from nodes hash map
+     * Hence, It could lead to bad access exception we need to handle it :D
+     */
+    private class TreePruner implements Runnable {
+
+        private BlockNode root;
+        private HashMap<String, BlockNode> nodes;
+
+        public TreePruner(BlockNode root, HashMap<String, BlockNode> nodes) {
+            this.root = root;
+            this.nodes = nodes;
+        }
+
+        @Override
+        public void run() {
+            try {
+                traverseTree(root);
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void traverseTree(BlockNode node) throws NoSuchAlgorithmException {
+            nodes.remove(BytesConverter.byteToHexString(node.getBlock().getMerkleTreeRoot(), 64));
+            for (BlockNode child : node.getChildren())
+                traverseTree(child);
+        }
+    }
+
     public static void main(String[] args) throws NoSuchAlgorithmException {
-        TransactionInput i1 =  new TransactionInput();
-        TransactionInput i2 =  new TransactionInput();
+        TransactionInput i1 = new TransactionInput();
+        TransactionInput i2 = new TransactionInput();
 
 
         TransactionOutput o1 = new TransactionOutput();
@@ -145,7 +183,7 @@ public class TransientPartitionTree implements Serializable {
 
         Transaction t0 = new SpecialTransaction(4);
 
-        t0.setTransactionOutputs(new TransactionOutput[]{o6, o7 , o8, o9});
+        t0.setTransactionOutputs(new TransactionOutput[]{o6, o7, o8, o9});
 
         byte[] t0Hash = t0.getTransactionHash();
 
@@ -163,20 +201,17 @@ public class TransientPartitionTree implements Serializable {
         i2.transactionHash = t0Hash;
         i2.signature = rsa2.decrypt(new BigInteger(1, t0Hash));
 
-        Transaction t1 = new NormalTransaction(2,2);
+        Transaction t1 = new NormalTransaction(2, 2);
 
-        t1.setTransactionInputs( new TransactionInput[]{i1, i2});
-        t1.setTransactionOutputs( new TransactionOutput[]{o1, o2});
+        t1.setTransactionInputs(new TransactionInput[]{i1, i2});
+        t1.setTransactionOutputs(new TransactionOutput[]{o1, o2});
 
         Transaction t2 = new NormalTransaction(2, 3);
-
 
 
         TransientPartitionTree tree = new TransientPartitionTree();
         // Block 1
         Block b1 = new Block(0);
-        b1.hash = new byte[1];
-        b1.hash[0] = 0;
         BlockHeader h1 = new BlockHeader();
         h1.hashOfPrevBlock = new byte[1];
         h1.hashOfPrevBlock[0] = 1;
@@ -188,23 +223,18 @@ public class TransientPartitionTree implements Serializable {
 
         // Block 2
         Block b2 = new Block(0);
-        b2.hash = new byte[1];
-        b2.hash[0] = 1;
         BlockHeader h2 = new BlockHeader();
-        h2.hashOfPrevBlock = new byte[1];
-        h2.hashOfPrevBlock[0] = 0;
+        h2.hashOfPrevBlock = b1.getMerkleTreeRoot();
         b2.setHeader(h2);
 
+        b2.setTransactions(new Transaction[]{t0, t1});
 
         tree.addBlock(b2);
 
         // Block 3
         Block b3 = new Block(0);
-        b3.hash = new byte[1];
-        b3.hash[0] = 2;
         BlockHeader h3 = new BlockHeader();
-        h3.hashOfPrevBlock = new byte[1];
-        h3.hashOfPrevBlock[0] = 0;
+        h3.hashOfPrevBlock = b1.getMerkleTreeRoot();
         b3.setHeader(h3);
 
         b3.setTransactions(new Transaction[]{t1});
@@ -214,13 +244,10 @@ public class TransientPartitionTree implements Serializable {
 
         // Block 4
         Block b4 = new Block(0);
-        b4.hash = new byte[1];
-        b4.hash[0] = 3;
         BlockHeader h4 = new BlockHeader();
-        h4.hashOfPrevBlock = new byte[1];
-        h4.hashOfPrevBlock[0] = 1;
+        h4.hashOfPrevBlock = b2.getMerkleTreeRoot();
         b4.setHeader(h4);
-        b4.setTransactions(new Transaction[]{t1});
+        b4.setTransactions(new Transaction[]{t1, t0, t1});
 
         tree.addBlock(b4);
 

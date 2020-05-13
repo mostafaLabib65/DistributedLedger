@@ -85,11 +85,20 @@ public class BlockNode implements Serializable {
         return node;
     }
 
+    public void removeChild(BlockNode child) {
+        this.children.remove(child);
+    }
+
     public boolean equals(BlockNode node) {
         try {
             return this.block.getMerkleTreeRoot().equals(node.getBlock().getMerkleTreeRoot());
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
     }
 }
