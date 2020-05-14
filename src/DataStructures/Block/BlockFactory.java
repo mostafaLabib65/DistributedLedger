@@ -3,7 +3,6 @@ package DataStructures.Block;
 import DataStructures.Transaction.Transaction;
 import DataStructures.Transaction.TransactionFactory;
 import Utils.BytesConverter;
-
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +20,7 @@ public class BlockFactory {
         for (String publicKeyHash : publicKeyHashes) {
             for(int i = 0; i < 1000; i++){
                 Transaction t = factory.createSpecialTransactionForPublicKey(
-                        BytesConverter.hexStringToByteArray(publicKeyHash), amount);
+                        publicKeyHash.getBytes(), amount);
                 transactions.add(t);
             }
         }
@@ -52,6 +51,8 @@ public class BlockFactory {
         Block b = factory.createGenesisBlock(pks);
 
         System.out.println("test");
+
+
 
 
 
