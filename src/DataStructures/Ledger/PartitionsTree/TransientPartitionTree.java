@@ -67,7 +67,7 @@ public class TransientPartitionTree implements Serializable {
         return longestLeaf == null ? 0 : longestLeaf.getHeight() - root.getHeight();
     }
 
-    public UTXOEntry[] getLongestBranchUTXOSet(String publicKeyHash) {
+    public UTXOEntry[] getLongestBranchUTXOSet(String publicKeyHash) throws Exception {
         return longestLeaf.getUtxoSet().getUTXOsAvailableForPublicKey(publicKeyHash).toArray(new UTXOEntry[0]);
     }
 

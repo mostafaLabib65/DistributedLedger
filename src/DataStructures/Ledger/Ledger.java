@@ -31,7 +31,7 @@ public class Ledger implements Serializable {
         return true;
     }
 
-    public UTXOEntry[] getAvailableUTXOsForPublicKey(String publicKeyHash) {
+    public UTXOEntry[] getAvailableUTXOsForPublicKey(String publicKeyHash) throws Exception {
         //TODO check validity
         return partitionTree.getLongestBranchUTXOSet(publicKeyHash);
     }

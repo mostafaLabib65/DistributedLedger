@@ -243,7 +243,7 @@ public class LedgerPartition implements Serializable {
     }
 
 
-    public UTXOEntry[] getUTXOsAvailableForPublicKey(String publicKeyHash) {
+    public UTXOEntry[] getUTXOsAvailableForPublicKey(String publicKeyHash) throws Exception {
         return utxoSet.getUTXOsAvailableForPublicKey(publicKeyHash).toArray(new UTXOEntry[0]);
     }
 
