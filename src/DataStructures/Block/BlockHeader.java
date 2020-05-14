@@ -38,6 +38,10 @@ public class BlockHeader {
         return SHA.getSHA(blockHeaderBytes);
     }
 
+    public byte[] getHashOfPrevBlock() {
+        return hashOfPrevBlock;
+    }
+
     public static void main(String[] args) throws NoSuchAlgorithmException {
         BlockHeader h1 = new BlockHeader();
         BlockHeader h2 = new BlockHeader();

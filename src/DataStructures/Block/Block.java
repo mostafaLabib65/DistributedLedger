@@ -17,7 +17,6 @@ import java.util.HashMap;
 
 public class Block {
 
-
     private BlockHeader header;
     private Transaction[] transactions;
     private MerkleTree merkleTree;

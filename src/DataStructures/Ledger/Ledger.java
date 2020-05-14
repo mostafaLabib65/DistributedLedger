@@ -20,28 +20,26 @@ public class Ledger implements Serializable {
     }
 
     public boolean addBlock(Block block) throws NoSuchAlgorithmException {
-//        if(!partitionTree.addBlock(block))
-//            return false;
-//        if (partitionTree.getMaxBranchDepth() > transientLedgerMaxLength) {
-//            Block tmp = partitionTree.removeFirstBlock();
-//            baseLedger.addBlock(tmp);
-//        }
-//        return true;
-        return baseLedger.addBlock(block);
+        if (!partitionTree.addBlock(block))
+            return false;
+
+        if (partitionTree.getMaxBranchDepth() > transientLedgerMaxLength) {
+            Block tmp = partitionTree.removeFirstBlock();
+            baseLedger.addBlock(tmp);
+        }
+
+        return true;
     }
 
     public UTXOEntry[] getAvailableUTXOsForPublicKey(String publicKeyHash) {
-
         //TODO check validity
-//        return partitionTree.getLongestBranchUTXOSet();
-        return baseLedger.getUTXOsAvailableForPublicKey(publicKeyHash);
+        return partitionTree.getLongestBranchUTXOSet(publicKeyHash);
     }
 
 
-    public int getLegderDepth() {
-
+    public int getLedgerDepth() {
         //TODO Change
-        return baseLedger.getDepth();
+        return baseLedger.getDepth() + partitionTree.getMaxBranchDepth();
     }
 
     public byte[] getLastBlockHash() throws NoSuchAlgorithmException {

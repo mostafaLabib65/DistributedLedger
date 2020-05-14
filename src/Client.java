@@ -220,7 +220,7 @@ public class Client implements Subscription.Subscriber {
                 break;
             case RECEIVE_LEDGER:
                 System.out.println("Received Ledger");
-                if(cu.getLedger().getLegderDepth() >= ledger.getLegderDepth()){
+                if(cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
                     System.out.println("Ledger accepted");
                     ledger = cu.getLedger();
                     this.blockAdderThread.interrupt();
