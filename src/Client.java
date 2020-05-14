@@ -196,8 +196,9 @@ public class Client implements Subscription.Subscriber {
     private void createKeys() {
         rsa = new RSA(2048);
         publicKey = rsa.getPublicKey();
-        publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
         modulus = rsa.getModulus();
+        publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
+
     }
 
     private void request(Events event) {
@@ -283,6 +284,7 @@ public class Client implements Subscription.Subscriber {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+
         return BytesConverter.byteToHexString(pkHash, 64);
     }
 
