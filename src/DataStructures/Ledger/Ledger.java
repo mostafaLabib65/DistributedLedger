@@ -43,7 +43,7 @@ public class Ledger implements Serializable {
     }
 
     public byte[] getLastBlockHash() throws NoSuchAlgorithmException {
-        return baseLedger.getLastBlockHash();
+        return partitionTree.getLastBlockHash();
     }
 
 
