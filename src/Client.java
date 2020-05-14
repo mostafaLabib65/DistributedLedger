@@ -18,9 +18,11 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import static java.lang.Thread.sleep;
 import static network.events.Events.BLOCK;
 
 public class Client implements Subscription.Subscriber {
@@ -37,7 +39,7 @@ public class Client implements Subscription.Subscriber {
     private BigInteger modulus;
     private RSA rsa;
     private Ledger ledger;
-    private List<String> hashedPublicKeys;
+    private List<String> hashedPublicKeys = new LinkedList<>();
     private Random rand;
 
     public Client(int port) {
@@ -50,7 +52,7 @@ public class Client implements Subscription.Subscriber {
         Subscription.getSubscription().subscribe(Events.RECEIVE_PUBLICKEYS, this);
         initialize();
         initializeBlockAdderToLedgerService();
-//        busyWaiting();
+        busyWaiting();
         sendTransactions();
     }
     private void initializeBlockAdderToLedgerService(){
@@ -59,9 +61,15 @@ public class Client implements Subscription.Subscriber {
         this.blockAdderThread.start();
     }
     private void busyWaiting() {
-        sleep(1000000);
-        request(Events.REQUEST_LEDGER);
-        request(Events.REQUEST_PUBLICKEYS);
+        System.out.println("Waiting for ledger and public keys");
+        while (ledger == null || hashedPublicKeys.isEmpty()){
+            try {
+                sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Busy waiting finished");
     }
 
     private void sendTransactions() {
@@ -70,8 +78,10 @@ public class Client implements Subscription.Subscriber {
         for (int i = 0; i < numOfTransactions; i++) {
             if(ledger != null) {
                 Transaction transaction = createTransaction();
-                if (transaction != null)
+                if (transaction != null){
                     sendTransaction(transaction);
+                    System.out.println("Transaction was sent");
+                }
             }
 //            sleep(100);
         }
@@ -171,6 +181,7 @@ public class Client implements Subscription.Subscriber {
 
             createKeys();
             sendPublickey();
+            request(Events.REQUEST_PUBLICKEYS);
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -203,42 +214,39 @@ public class Client implements Subscription.Subscriber {
     public void notify(Events events, CommunicationUnit cu) {
         switch (events) {
             case BLOCK:
-                if(ledger != null && !hashedPublicKeys.isEmpty()){
                     this.addBlocksToLedgerQueue.add(cu.getBlock());
                     if(this.addBlocksToLedgerQueue.size() == 1)
                         this.blockAdderThread.interrupt();
-                }
                 break;
             case RECEIVE_LEDGER:
+                System.out.println("Received Ledger");
                 if(cu.getLedger().getLegderDepth() >= ledger.getLegderDepth()){
+                    System.out.println("Ledger accepted");
                     ledger = cu.getLedger();
                     this.blockAdderThread.interrupt();
                 }
                 break;
             case REQUEST_LEDGER:
-                if(ledger != null && !hashedPublicKeys.isEmpty()){
                     sendLedger();
-                }
                 break;
-            case PUBLISH_PUBLICKEY:
-                hashedPublicKeys.add(cu.getHashedPublicKey());
-                break;
+
             case REQUEST_PUBLICKEYS:
-                sendPublickKeys();
+                System.out.println("Received public keys request: sending it...");
+                this.sendPublickey();
                 break;
             case RECEIVE_PUBLICKEYS:
-                hashedPublicKeys = cu.getHashedPublicKeys();
+                hashedPublicKeys.add(cu.getHashedPublicKey());
                 break;
         }
     }
 
-    private void sendPublickKeys() {
-        CommunicationUnit cu = new CommunicationUnit();
-        cu.setEvent(Events.RECEIVE_PUBLICKEYS);
-        cu.setHashedPublicKeys(hashedPublicKeys);
-
-        process.invokeClientEvent(cu);
-    }
+//    private void sendPublickKeys() {
+//        CommunicationUnit cu = new CommunicationUnit();
+//        cu.setEvent(Events.RECEIVE_PUBLICKEYS);
+//        cu.setHashedPublicKeys(hashedPublicKeys);
+//
+//        process.invokeClientEvent(cu);
+//    }
 
     private void sendLedger() {
         CommunicationUnit cu = new CommunicationUnit();
@@ -248,15 +256,15 @@ public class Client implements Subscription.Subscriber {
         process.invokeClientEvent(cu);
     }
 
-    private void sleep(int time) {
-        sleep(1000000);
-        request(Events.REQUEST_LEDGER);
-        request(Events.REQUEST_PUBLICKEYS);
-    }
+//    private void sleep(int time) {
+//        sleep(1000000);
+//        request(Events.REQUEST_LEDGER);
+//        request(Events.REQUEST_PUBLICKEYS);
+//    }
 
-    private void sendPublickey() {
-        CommunicationUnit cu = new CommunicationUnit();
-        cu.setEvent(Events.PUBLISH_PUBLICKEY);
+
+
+    protected String getHashedPublicKey(){
         ArrayList<byte[]> tmp = new ArrayList<>();
         tmp.add(publicKey.toByteArray());
         tmp.add(modulus.toByteArray());
@@ -266,8 +274,12 @@ public class Client implements Subscription.Subscriber {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        cu.setHashedPublicKey(BytesConverter.byteToHexString(pkHash, 64));
-
+        return BytesConverter.byteToHexString(pkHash, 64);
+    }
+    protected void sendPublickey() {
+        CommunicationUnit cu = new CommunicationUnit();
+        cu.setEvent(Events.RECEIVE_PUBLICKEYS);
+        cu.setHashedPublicKey(getHashedPublicKey());
         process.invokeClientEvent(cu);
     }
 
