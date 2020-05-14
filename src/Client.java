@@ -44,7 +44,7 @@ public class Client implements Subscription.Subscriber {
         this.port = port;
         Subscription.getSubscription().subscribe(Events.BLOCK, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
-        Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
+        Subscription.getSubscription().subscribe(Events.RECEIVE_LEDGER, this);
         Subscription.getSubscription().subscribe(Events.PUBLISH_PUBLICKEY, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_PUBLICKEYS, this);
         Subscription.getSubscription().subscribe(Events.RECEIVE_PUBLICKEYS, this);
@@ -71,6 +71,7 @@ public class Client implements Subscription.Subscriber {
     }
 
     private void sendTransactions() {
+        System.out.println("Start making transactions");
         int numOfTransactions = rand.nextInt(5);
 
         for (int i = 0; i < numOfTransactions; i++) {
@@ -223,11 +224,11 @@ public class Client implements Subscription.Subscriber {
                 break;
             case RECEIVE_LEDGER:
                 System.out.println("Received Ledger");
-                if(cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
+                if(ledger == null || cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
                     System.out.println("Ledger accepted");
                     ledger = cu.getLedger();
                     UTXOSet = ledger.getAvailableUTXOsForPublicKey(publicKeyString);
-                    this.blockAdderThread.interrupt();
+//                    this.blockAdderThread.interrupt(); //TODO need to be fixed ML
                 }
                 break;
             case REQUEST_LEDGER:
