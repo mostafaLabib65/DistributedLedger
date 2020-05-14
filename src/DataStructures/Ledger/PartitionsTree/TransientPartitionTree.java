@@ -1,12 +1,12 @@
 package DataStructures.Ledger.PartitionsTree;
 
 import DataStructures.Block.Block;
-import DataStructures.Ledger.LedgerPartition;
 import DataStructures.Ledger.UTXOEntry;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class TransientPartitionTree {
+public class TransientPartitionTree implements Serializable {
 
 
 

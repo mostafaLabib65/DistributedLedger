@@ -7,11 +7,12 @@ import Utils.BytesConverter;
 import Utils.RSA;
 import Utils.SHA;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-public class LedgerPartition {
+public class LedgerPartition implements Serializable {
 
     private ArrayList<Block> blocks;
     private UTXOSet utxoSet;

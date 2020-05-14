@@ -3,9 +3,10 @@ package DataStructures.Ledger;
 import DataStructures.Block.Block;
 import DataStructures.Ledger.PartitionsTree.TransientPartitionTree;
 
+import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 
-public class Ledger {
+public class Ledger implements Serializable {
 
 
     private LedgerPartition baseLedger;

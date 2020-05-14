@@ -1,13 +1,13 @@
 package DataStructures.Ledger;
 
 import DataStructures.Transaction.Transaction;
-import DataStructures.Transaction.TransactionOutput;
 import Utils.BytesConverter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class UTXOSet {
+public class UTXOSet implements Serializable {
 
 
     private HashMap<String,UTXOEntry> transactionHashToBlockAndTxIndex;
