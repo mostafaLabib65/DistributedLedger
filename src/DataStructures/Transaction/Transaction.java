@@ -1,17 +1,15 @@
 package DataStructures.Transaction;
 
-import DataStructures.Ledger.UTXOSet;
 import Utils.BytesConverter;
-import Utils.RSA;
 import Utils.SHA;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashSet;
 
-public abstract class Transaction {
+public abstract class Transaction implements Serializable {
 
     private int version = 1;
     private int inputCounter = 0;

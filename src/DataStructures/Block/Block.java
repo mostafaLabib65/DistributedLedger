@@ -9,13 +9,13 @@ import Utils.BytesConverter;
 import Utils.RSA;
 import Utils.SHA;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Block {
+public class Block implements Serializable {
 
     private BlockHeader header;
     private Transaction[] transactions;

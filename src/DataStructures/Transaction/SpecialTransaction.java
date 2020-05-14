@@ -1,6 +1,8 @@
 package DataStructures.Transaction;
 
-public class SpecialTransaction extends Transaction {
+import java.io.Serializable;
+
+public class SpecialTransaction extends Transaction implements Serializable {
 
 
     public SpecialTransaction(int outputCount) {

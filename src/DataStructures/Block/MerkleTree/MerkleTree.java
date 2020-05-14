@@ -2,12 +2,13 @@ package DataStructures.Block.MerkleTree;
 
 import DataStructures.Transaction.Transaction;
 
+import java.io.Serializable;
 import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MerkleTree {
+public class MerkleTree implements Serializable {
     private MerkleNode root;
     private List<MerkleNode> leaves;
 

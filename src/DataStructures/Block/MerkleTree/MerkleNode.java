@@ -2,9 +2,10 @@ package DataStructures.Block.MerkleTree;
 
 import Utils.SHA;
 
+import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 
-public class MerkleNode {
+public class MerkleNode implements Serializable {
     private byte[] hash;
     private MerkleNode leftChild;
     private MerkleNode rightChild;
