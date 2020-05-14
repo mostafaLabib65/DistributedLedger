@@ -37,7 +37,7 @@ public class Ledger implements Serializable {
     }
 
 
-    public int getLegderDepth() {
+    public int getLedgerDepth() {
         //TODO Change
         return baseLedger.getDepth() + partitionTree.getMaxBranchDepth();
     }

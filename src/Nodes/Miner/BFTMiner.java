@@ -113,7 +113,7 @@ public class BFTMiner extends Miner{
                 break;
 
             case RECEIVE_LEDGER:
-                if(cu.getLedger().getLegderDepth() >= ledger.getLegderDepth()){
+                if(cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
                     ledger = cu.getLedger();
                     this.blockAdderThread.interrupt();
                 }
