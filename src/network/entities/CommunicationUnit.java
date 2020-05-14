@@ -4,8 +4,8 @@ import DataStructures.Block.Block;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
 import network.events.Events;
+
 import java.io.Serializable;
-import java.util.List;
 
 public class CommunicationUnit implements Serializable {
 
@@ -18,7 +18,7 @@ public class CommunicationUnit implements Serializable {
     private Transaction transaction;
     private boolean BFTVote;
     private String hashedPublicKey;
-    private List<String> hashedPublicKeys;
+    private String hashedPublicKeys;
     private String serverAddress;
     private int serverPort;
 
@@ -82,11 +82,11 @@ public class CommunicationUnit implements Serializable {
         this.hashedPublicKey = hashedPublicKey;
     }
 
-    public List<String> getHashedPublicKeys() {
+    public String getHashedPublicKeys() {
         return hashedPublicKeys;
     }
 
-    public void setHashedPublicKeys(List<String> hashedPublicKeys) {
+    public void setHashedPublicKeys(String hashedPublicKeys) {
         this.hashedPublicKeys = hashedPublicKeys;
     }
 
