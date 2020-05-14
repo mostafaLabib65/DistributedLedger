@@ -47,11 +47,8 @@ public class TransientPartitionTree implements Serializable {
                 nodes.put(nodeHash, root);
                 return true;
             } else {
-                if (nodes.containsKey(parentHash)) {
+                if (isValidBlockForLedger(block)) {
                     BlockNode parent = nodes.get(parentHash);
-                    if (!block.isValidBlock(parent.getUtxoSet()))
-                        return false;
-
                     BlockNode node = parent.addNode(block);
                     nodes.put(nodeHash, node);
                     updateLongestLeaf(node);
@@ -72,6 +69,19 @@ public class TransientPartitionTree implements Serializable {
 
     public UTXOEntry[] getLongestBranchUTXOSet(String publicKeyHash) {
         return longestLeaf.getUtxoSet().getUTXOsAvailableForPublicKey(publicKeyHash).toArray(new UTXOEntry[0]);
+    }
+
+    public boolean isValidBlockForLedger(Block block) throws NoSuchAlgorithmException {
+        String parentHash = BytesConverter.byteToHexString(block.getPreviousHash(), 64);
+        if (root != null) {
+            if (!nodes.containsKey(parentHash))
+                return false;
+        }
+        return block.isValidBlock(nodes.get(parentHash).getUtxoSet());
+    }
+
+    public byte[] getLastBlockHash() throws NoSuchAlgorithmException {
+        return longestLeaf.getBlock().getHash();
     }
 
     private void updateLongestLeaf(BlockNode node) {
