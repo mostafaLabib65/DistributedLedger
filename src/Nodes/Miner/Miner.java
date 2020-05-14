@@ -107,6 +107,13 @@ public abstract class Miner implements Subscription.Subscriber{
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress);
             process.start();
+            CommunicationUnit cu = new CommunicationUnit();
+            cu.setServerAddress("127.0.0.1");
+            cu.setSocketAddress("127.0.0.1");
+            cu.setSocketPort(4000);
+            cu.setServerPort(port);
+            cu.setEvent(ADDRESS);
+            process.invokeClientEvent(cu);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -166,16 +173,14 @@ public abstract class Miner implements Subscription.Subscriber{
 //        }
 //    }
 
-    protected void sendPublickKeys() {
-        CommunicationUnit cu = new CommunicationUnit();
-        cu.setEvent(Events.RECEIVE_PUBLICKEYS);
-        cu.setHashedPublicKeys(hashedPublicKeys);
-        process.invokeClientEvent(cu);
-    }
+//    protected void sendPublickKeys() {
+//        CommunicationUnit cu = new CommunicationUnit();
+//        cu.setEvent(Events.RECEIVE_PUBLICKEYS);
+//        cu.setHashedPublicKeys(hashedPublicKeys);
+//        process.invokeClientEvent(cu);
+//    }
 
-    private void sendPublickey() {
-        CommunicationUnit cu = new CommunicationUnit();
-        cu.setEvent(Events.PUBLISH_PUBLICKEY);
+    protected String getHashedPublicKey(){
         ArrayList<byte[]> tmp = new ArrayList<>();
         tmp.add(publicKey.toByteArray());
         tmp.add(modulus.toByteArray());
@@ -185,7 +190,12 @@ public abstract class Miner implements Subscription.Subscriber{
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        cu.setHashedPublicKey(BytesConverter.byteToHexString(pkHash, 64));
+        return BytesConverter.byteToHexString(pkHash, 64);
+    }
+    protected void sendPublickey() {
+        CommunicationUnit cu = new CommunicationUnit();
+        cu.setEvent(RECEIVE_PUBLICKEYS);
+        cu.setHashedPublicKey(getHashedPublicKey());
         process.invokeClientEvent(cu);
     }
 

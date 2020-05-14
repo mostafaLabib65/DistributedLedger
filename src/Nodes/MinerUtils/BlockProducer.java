@@ -71,16 +71,19 @@ public class BlockProducer implements Runnable {
                 BlockFactory factory = new BlockFactory();
                 try {
                     if (hashedPublicKeys.size() != numOfParticipants){
-                        System.out.println("Waiting for hash keys");
+                        System.out.println("Block producer: Waiting for hash keys");
                         wait();
                     }
-                    this.genesisBlock = factory.createGenesisBlock(hashedPublicKeys);
-                    this.ledger.addBlock(this.genesisBlock);
-                    this.sendLedger();
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
                 } catch (InterruptedException e){
-                    System.out.println("Hash keys received");
+                    System.out.println("Block producer: Hash keys received");
+                    try {
+                        System.out.println("Block Producer: Sending Ledger");
+                        this.genesisBlock = factory.createGenesisBlock(hashedPublicKeys);
+                        this.ledger.addBlock(this.genesisBlock);
+                        this.sendLedger();
+                    } catch (NoSuchAlgorithmException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
             while (true){

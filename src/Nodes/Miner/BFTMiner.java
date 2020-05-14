@@ -123,16 +123,19 @@ public class BFTMiner extends Miner{
                 sendLedger();
                 break;
 
-            case PUBLISH_PUBLICKEY:
-                hashedPublicKeys.add(cu.getHashedPublicKey());
-                break;
+
 
             case REQUEST_PUBLICKEYS:
-                sendPublickKeys();
+                this.sendPublickey();
                 break;
 
+
             case RECEIVE_PUBLICKEYS:
-                hashedPublicKeys = cu.getHashedPublicKeys();
+                System.out.println("POW Miner: received public key");
+                hashedPublicKeys.add(cu.getHashedPublicKey());
+                if(hashedPublicKeys.size() == numOfParticipants-1)
+                    hashedPublicKeys.add(getHashedPublicKey());
+                this.blockProducerThread.interrupt();
                 break;
         }
     }
