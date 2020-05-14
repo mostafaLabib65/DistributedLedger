@@ -197,8 +197,9 @@ public class Client implements Subscription.Subscriber {
     private void createKeys() {
         rsa = new RSA(2048);
         publicKey = rsa.getPublicKey();
-        publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
         modulus = rsa.getModulus();
+        publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
+
     }
 
     private void request(Events event) {
@@ -228,7 +229,11 @@ public class Client implements Subscription.Subscriber {
                 if(ledger == null || cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
                     System.out.println("Ledger accepted");
                     ledger = cu.getLedger();
-                    UTXOSet = ledger.getAvailableUTXOsForPublicKey(publicKeyString);
+                    try {
+                        UTXOSet = ledger.getAvailableUTXOsForPublicKey(getHashedPublicKey());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     this.blockAdderThread.interrupt();
                 }
                 break;
@@ -279,6 +284,7 @@ public class Client implements Subscription.Subscriber {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+
         return BytesConverter.byteToHexString(pkHash, 64);
     }
 
