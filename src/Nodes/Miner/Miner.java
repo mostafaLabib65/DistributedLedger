@@ -78,7 +78,6 @@ public abstract class Miner implements Subscription.Subscriber{
         this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize,
                 rsa, leader, this.blockConsumerThread,
                 this.hashedPublicKeys, this.numOfParticipants, this.ledger, this.process);
-        sendLedger();
         this.blockProducerThread = new Thread(this.blockProducer);
         blockProducerThread.start();
     }

@@ -38,7 +38,7 @@ public class ClientBlockAdder implements Runnable{
                         System.out.println("BlockAdderThread: Block received start adding to ledger");
                     }
                 }
-                if(!waitingForLedger){
+                if(!waitingForLedger && addBlocksToLedgerQueue.size() != 0){
                     this.block = addBlocksToLedgerQueue.get(0);
                     addBlocksToLedgerQueue.remove(block);
                 }

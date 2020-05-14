@@ -3,7 +3,9 @@ package DataStructures.Ledger;
 import DataStructures.Transaction.Transaction;
 import DataStructures.Transaction.TransactionOutput;
 
-public class UTXOEntry {
+import java.io.Serializable;
+
+public class UTXOEntry implements Serializable {
     public int blockIndex;
     public int transactionIndex;
     public Transaction transaction;

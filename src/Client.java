@@ -17,13 +17,9 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static java.lang.Thread.sleep;
-import static network.events.Events.BLOCK;
 
 public class Client implements Subscription.Subscriber {
 
@@ -34,8 +30,10 @@ public class Client implements Subscription.Subscriber {
     private ClientBlockAdder blockAdder;
     private Thread blockAdderThread;
     protected ArrayList<Block> addBlocksToLedgerQueue = new ArrayList<>();
+    UTXOEntry[] UTXOSet;
 
     private BigInteger publicKey;
+    private String publicKeyString;
     private BigInteger modulus;
     private RSA rsa;
     private Ledger ledger;
@@ -44,9 +42,9 @@ public class Client implements Subscription.Subscriber {
 
     public Client(int port) {
         this.port = port;
-        Subscription.getSubscription().subscribe(BLOCK, this);
+        Subscription.getSubscription().subscribe(Events.BLOCK, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
-        Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
+        Subscription.getSubscription().subscribe(Events.RECEIVE_LEDGER, this);
         Subscription.getSubscription().subscribe(Events.PUBLISH_PUBLICKEY, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_PUBLICKEYS, this);
         Subscription.getSubscription().subscribe(Events.RECEIVE_PUBLICKEYS, this);
@@ -73,6 +71,7 @@ public class Client implements Subscription.Subscriber {
     }
 
     private void sendTransactions() {
+        System.out.println("Start making transactions");
         int numOfTransactions = rand.nextInt(5);
 
         for (int i = 0; i < numOfTransactions; i++) {
@@ -89,12 +88,9 @@ public class Client implements Subscription.Subscriber {
     }
 
     private Transaction createTransaction() {
-
         String publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
 
-        UTXOEntry[] UTXOSet = ledger.getAvailableUTXOsForPublicKey(publicKeyString);
-
-        if(UTXOSet.length == 0) {
+        if(UTXOSet == null || UTXOSet.length == 0) {
             return null;
         }
 
@@ -156,8 +152,17 @@ public class Client implements Subscription.Subscriber {
         } else {
             throw new RuntimeException("Incorrect number of outputs");
         }
-
+        removeIndicesFromUTXOSet(numberOfUTXOEntriesChosen);
         return transaction;
+    }
+
+    private void removeIndicesFromUTXOSet(int[] numberOfUTXOEntriesChosen) {
+        List<UTXOEntry> list = new ArrayList<>(Arrays.asList(UTXOSet));
+        for (int i = 0; i < numberOfUTXOEntriesChosen.length; i++) {
+            list.set(numberOfUTXOEntriesChosen[i], null);
+        }
+        while(list.remove(null));
+        UTXOSet =  Arrays.copyOf(list.toArray(), list.toArray().length, UTXOEntry[].class);
     }
 
     private int[] getNumberOfUTXOChosen(int bound, int sizeOfArray) {
@@ -192,13 +197,13 @@ public class Client implements Subscription.Subscriber {
     private void createKeys() {
         rsa = new RSA(2048);
         publicKey = rsa.getPublicKey();
+        publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
         modulus = rsa.getModulus();
     }
 
     private void request(Events event) {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(event);
-
         process.invokeClientEvent(cu);
     }
 
@@ -206,7 +211,6 @@ public class Client implements Subscription.Subscriber {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(Events.TRANSACTION);
         cu.setTransaction(transaction);
-
         process.invokeClientEvent(cu);
     }
 
@@ -214,22 +218,23 @@ public class Client implements Subscription.Subscriber {
     public void notify(Events events, CommunicationUnit cu) {
         switch (events) {
             case BLOCK:
-                    this.addBlocksToLedgerQueue.add(cu.getBlock());
-                    if(this.addBlocksToLedgerQueue.size() == 1)
-                        this.blockAdderThread.interrupt();
+                this.addBlocksToLedgerQueue.add(cu.getBlock());
+                if(this.addBlocksToLedgerQueue.size() == 1)
+                    this.blockAdderThread.interrupt();
                 break;
             case RECEIVE_LEDGER:
                 System.out.println("Received Ledger");
-                if(cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
+
+                if(ledger == null || cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
                     System.out.println("Ledger accepted");
                     ledger = cu.getLedger();
+                    UTXOSet = ledger.getAvailableUTXOsForPublicKey(publicKeyString);
                     this.blockAdderThread.interrupt();
                 }
                 break;
             case REQUEST_LEDGER:
                     sendLedger();
                 break;
-
             case REQUEST_PUBLICKEYS:
                 System.out.println("Received public keys request: sending it...");
                 this.sendPublickey();
@@ -276,6 +281,7 @@ public class Client implements Subscription.Subscriber {
         }
         return BytesConverter.byteToHexString(pkHash, 64);
     }
+
     protected void sendPublickey() {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(Events.RECEIVE_PUBLICKEYS);
@@ -295,10 +301,15 @@ public class Client implements Subscription.Subscriber {
 
 //        System.out.println(Arrays.toString(myArray));
 
-
-
+        String[] str = {"abc", "bks", "asasa", "sasasa","bks",  "sasas"};
+        List<String> list = new ArrayList<>(Arrays.asList(str));
+        int[] numberOfUTXOEntriesChosen = {1,2,4};
+        for (int i = 0; i < numberOfUTXOEntriesChosen.length; i++) {
+            list.set(numberOfUTXOEntriesChosen[i], null);
+        }
+        while(list.remove(null));
+        str =  Arrays.copyOf(list.toArray(), list.toArray().length, String[].class);
+        System.out.println(Arrays.toString(str));
     }
 
 }
-
-

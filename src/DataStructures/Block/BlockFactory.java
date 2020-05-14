@@ -18,8 +18,10 @@ public class BlockFactory {
 
         TransactionFactory factory = new TransactionFactory();
         for (String publicKeyHash : publicKeyHashes) {
-            Transaction t = factory.createSpecialTransactionForPublicKey(publicKeyHash.getBytes(), amount);
-            transactions.add(t);
+            for(int i = 0; i < 1000; i++){
+                Transaction t = factory.createSpecialTransactionForPublicKey(publicKeyHash.getBytes(), amount);
+                transactions.add(t);
+            }
         }
 
         BlockHeader header = new BlockHeader();

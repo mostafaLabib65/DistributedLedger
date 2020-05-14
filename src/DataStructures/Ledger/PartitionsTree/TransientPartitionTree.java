@@ -49,6 +49,7 @@ public class TransientPartitionTree implements Serializable {
             } else {
                 if (isValidBlockForLedger(block)) {
                     BlockNode parent = nodes.get(parentHash);
+
                     BlockNode node = parent.addNode(block);
                     nodes.put(nodeHash, node);
                     updateLongestLeaf(node);
@@ -61,7 +62,6 @@ public class TransientPartitionTree implements Serializable {
             return false;
         }
     }
-
 
     public int getMaxBranchDepth() {
         return longestLeaf == null ? 0 : longestLeaf.getHeight() - root.getHeight();

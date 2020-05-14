@@ -3,11 +3,12 @@ package DataStructures.Block;
 import Utils.BytesConverter;
 import Utils.SHA;
 
+import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 
 import static java.lang.System.currentTimeMillis;
 
-public class BlockHeader {
+public class BlockHeader implements Serializable {
     public Long timestamp = currentTimeMillis();
     public byte[] hashOfPrevBlock;
     public byte[] hashOfMerkleRoot;
