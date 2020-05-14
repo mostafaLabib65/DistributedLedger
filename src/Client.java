@@ -276,15 +276,14 @@ public class Client implements Subscription.Subscriber {
         ArrayList<byte[]> tmp = new ArrayList<>();
         tmp.add(publicKey.toByteArray());
         tmp.add(modulus.toByteArray());
-        try {
-            byte[] pkHash;
-            pkHash = SHA.getSHA(BytesConverter.concatenateByteArrays(tmp));
-            return BytesConverter.byteToHexString(pkHash, 64);
 
+        byte[] pkHash = new byte[0];
+        try {
+            pkHash = SHA.getSHA(BytesConverter.concatenateByteArrays(tmp));
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-            return null;
         }
+        return BytesConverter.byteToHexString(pkHash, 64);
     }
 
     protected void sendPublickey() {
