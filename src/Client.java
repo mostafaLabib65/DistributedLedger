@@ -135,17 +135,16 @@ public class Client implements Subscription.Subscriber {
         int receiverKey = rand.nextInt(hashedPublicKeys.size());
         if(numberOfOutputs == 1) {
             o1.amount = UTXOSummation;
-            o1.publicKeyHash = hashedPublicKeys.get(receiverKey).getBytes();
-
+            o1.publicKeyHash = BytesConverter.hexStringToByteArray(hashedPublicKeys.get(receiverKey));
             transaction.setTransactionOutputs(new TransactionOutput[]{o1});
 
         } else if (numberOfOutputs == 2) {
             float randomSplit = rand.nextFloat();
 
             o1.amount = (long) (UTXOSummation*randomSplit);
-            o1.publicKeyHash = hashedPublicKeys.get(receiverKey).getBytes();
+            o1.publicKeyHash = BytesConverter.hexStringToByteArray(hashedPublicKeys.get(receiverKey));
             o2.amount = (long) (UTXOSummation*(1.0 - randomSplit));
-            o2.publicKeyHash = publicKeyString.getBytes();
+            o2.publicKeyHash = BytesConverter.hexStringToByteArray(publicKeyString);
 
             transaction.setTransactionOutputs(new TransactionOutput[]{o1, o2});
 
@@ -228,7 +227,11 @@ public class Client implements Subscription.Subscriber {
                 if(ledger == null || cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
                     System.out.println("Ledger accepted");
                     ledger = cu.getLedger();
-                    UTXOSet = ledger.getAvailableUTXOsForPublicKey(publicKeyString);
+                    try {
+                        UTXOSet = ledger.getAvailableUTXOsForPublicKey(getHashedPublicKey());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     this.blockAdderThread.interrupt();
                 }
                 break;
@@ -273,13 +276,15 @@ public class Client implements Subscription.Subscriber {
         ArrayList<byte[]> tmp = new ArrayList<>();
         tmp.add(publicKey.toByteArray());
         tmp.add(modulus.toByteArray());
-        byte[] pkHash = new byte[0];
         try {
+            byte[] pkHash;
             pkHash = SHA.getSHA(BytesConverter.concatenateByteArrays(tmp));
+            return BytesConverter.byteToHexString(pkHash, 64);
+
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            return null;
         }
-        return BytesConverter.byteToHexString(pkHash, 64);
     }
 
     protected void sendPublickey() {

@@ -56,13 +56,13 @@ public abstract class Miner implements Subscription.Subscriber{
         this.numOfParticipants = numOfParticipants;
         initializeNetwork();
         initializeSubscriptions();
-        if(leader){
-            request(REQUEST_PUBLICKEYS);
-            ledger = new Ledger();
-        }
-        initializeBlockProducerService();
+        ledger = new Ledger();
         initializeBlockConsumerService();
         initializeBlockAdderToLedgerService();
+        initializeBlockProducerService();
+        if(leader){
+            request(REQUEST_PUBLICKEYS);
+        }
         sendPublickey();
     }
 
@@ -74,12 +74,12 @@ public abstract class Miner implements Subscription.Subscriber{
     }
 
     private void initializeBlockProducerService(){
-        System.out.println("Init Block Producer Service");
         this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize,
                 rsa, leader, this.blockConsumerThread,
                 this.hashedPublicKeys, this.numOfParticipants, this.ledger, this.process);
         this.blockProducerThread = new Thread(this.blockProducer);
         blockProducerThread.start();
+        System.out.println("Init Block Producer Service");
     }
 
     private void initializeBlockConsumerService(){

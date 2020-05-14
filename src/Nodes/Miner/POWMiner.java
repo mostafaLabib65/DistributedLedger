@@ -4,6 +4,8 @@ import Nodes.Consensus.Consensus;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 
+import static java.lang.Thread.sleep;
+
 public class POWMiner extends Miner{
     public POWMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants) {
         super(blockConsumer, blockSize, address, port, leader, numOfParticipants);
@@ -44,7 +46,7 @@ public class POWMiner extends Miner{
                 hashedPublicKeys.add(cu.getHashedPublicKey());
                 if(hashedPublicKeys.size() == numOfParticipants-1)
                     hashedPublicKeys.add(getHashedPublicKey());
-                    this.blockProducerThread.interrupt();
+                this.blockProducerThread.interrupt();
                 break;
         }
     }

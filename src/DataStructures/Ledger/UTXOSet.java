@@ -58,7 +58,7 @@ public class UTXOSet implements Cloneable, Serializable {
     public ArrayList<UTXOEntry> getUTXOsAvailableForPublicKey(String hash) throws Exception {
         //TODO handle exception
         //TODO handle no UTXO available (size = 0)
-        if (availableUTXOsForPublicKey.containsKey(hash))
+        if (!availableUTXOsForPublicKey.containsKey(hash))
             throw new Exception("Hash not Found");
         return availableUTXOsForPublicKey.get(hash);
     }
