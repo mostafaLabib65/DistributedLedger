@@ -79,7 +79,7 @@ public class BlockProducer implements Runnable {
                     try {
                         System.out.println("Block Producer: Sending Ledger");
                         this.genesisBlock = factory.createGenesisBlock(hashedPublicKeys);
-                        this.ledger.addBlock(this.genesisBlock);
+                        boolean success = this.ledger.addBlock(this.genesisBlock);
                         this.sendLedger();
                     } catch (NoSuchAlgorithmException ex) {
                         ex.printStackTrace();

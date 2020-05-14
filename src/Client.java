@@ -228,7 +228,7 @@ public class Client implements Subscription.Subscriber {
                     System.out.println("Ledger accepted");
                     ledger = cu.getLedger();
                     UTXOSet = ledger.getAvailableUTXOsForPublicKey(publicKeyString);
-//                    this.blockAdderThread.interrupt(); //TODO need to be fixed ML
+                    this.blockAdderThread.interrupt();
                 }
                 break;
             case REQUEST_LEDGER:
