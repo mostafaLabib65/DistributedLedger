@@ -40,7 +40,8 @@ public class Client implements Subscription.Subscriber {
     private Ledger ledger;
     private List<String> hashedPublicKeys = new LinkedList<>();
     private Random rand;
-
+    private List<String> transactionHash = new LinkedList<>();
+    private int transactionCounter = 0;
     public Client(int port) {
         this.port = port;
         Subscription.getSubscription().subscribe(Events.BLOCK, this);
@@ -76,18 +77,19 @@ public class Client implements Subscription.Subscriber {
     private void sendTransactions() {
         System.out.println("Start making transactions");
         int numOfTransactions = rand.nextInt(5);
-
-        for (int i = 0; i < numOfTransactions; i++) {
+        Transaction transaction = null;
+        do {
+            transaction = null;
             if(ledger != null) {
-                Transaction transaction = createTransaction();
+                 transaction = createTransaction();
                 if (transaction != null){
                     sendTransaction(transaction);
                     System.out.println("Transaction was sent");
                 }
             }
 //            sleep(100);
-        }
-
+        }while (transaction != null);
+        System.out.println("Finished sending transactions");
     }
 
     private Transaction createTransaction() {
@@ -99,7 +101,9 @@ public class Client implements Subscription.Subscriber {
         }
 
         List<UTXOEntry> chosenEntries = getNumberOfUTXOChosen();
-
+        if(chosenEntries.size() == 0){
+            return null;
+        }
         int numberOfOutputs = rand.nextInt(1) + 1; //number of outputs 1 or 2
 
         Transaction transaction = new NormalTransaction(chosenEntries.size(), numberOfOutputs);
@@ -154,12 +158,13 @@ public class Client implements Subscription.Subscriber {
         } else {
             throw new RuntimeException("Incorrect number of outputs");
         }
+        serveTransaction(transaction);
         return transaction;
     }
 
     private List<UTXOEntry> getNumberOfUTXOChosen() {
 
-        int bound = rand.nextInt(UTXOSet.length - 1) + 1;
+        int bound = rand.nextInt(10);
 
         List<UTXOEntry> chosenEntries = new ArrayList<>();
 
@@ -260,6 +265,31 @@ public class Client implements Subscription.Subscriber {
                 hashedPublicKeys.add(cu.getHashedPublicKey());
                 break;
         }
+    }
+
+//    private boolean repeatedTransaction(Transaction transaction){
+//        String hash = null;
+//        try {
+//            hash = BytesConverter.byteToHexString(
+//                    transaction.getTransactionHash(),64);
+//        } catch (NoSuchAlgorithmException e) {
+//            e.printStackTrace();
+//        }
+//        int test = -1;
+//        if(transactionHashToIndex.containsKey(hash)){
+//            test = transactionHashToIndex.get(hash);
+//        }
+//        return transactionHashToIndex.containsKey(hash);
+//    }
+
+    protected void serveTransaction(Transaction transaction){
+            try {
+                transactionHash.add(BytesConverter.byteToHexString(
+                        transaction.getTransactionHash(),64));
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+            System.out.println("transaction added");
     }
 
 //    private void sendPublickKeys() {
