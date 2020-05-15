@@ -13,6 +13,7 @@ import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 import network.state.Subscription;
+import network.utils.ConnectionInitializer;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -107,7 +108,11 @@ public abstract class Miner implements Subscription.Subscriber{
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress);
             process.start();
-            startConnecting(4000);
+
+            ConnectionInitializer ci = new ConnectionInitializer(process);
+            ci.init();
+
+//            startConnecting(4000);
 //            startConnecting(4001);
         } catch (UnknownHostException e) {
             e.printStackTrace();
