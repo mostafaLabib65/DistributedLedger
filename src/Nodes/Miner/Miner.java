@@ -47,6 +47,7 @@ public abstract class Miner implements Subscription.Subscriber{
     protected Thread blockAdderThread;
     protected int numOfParticipants;
     protected ArrayList<Block> addBlocksToLedgerQueue = new ArrayList<>();
+    private int transactionCounter = 0;
     public Miner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants){
         this.address = address;
         this.port = port;
@@ -106,19 +107,23 @@ public abstract class Miner implements Subscription.Subscriber{
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress);
             process.start();
-            CommunicationUnit cu = new CommunicationUnit();
-            cu.setServerAddress("127.0.0.1");
-            cu.setSocketAddress("127.0.0.1");
-            cu.setSocketPort(4000);
-            cu.setServerPort(port);
-            cu.setEvent(ADDRESS);
-            process.invokeClientEvent(cu);
+            startConnecting(4000);
+//            startConnecting(4001);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
 
     }
 
+    private void startConnecting(int port){
+        CommunicationUnit cu = new CommunicationUnit();
+        cu.setServerAddress("127.0.0.1");
+        cu.setSocketAddress("127.0.0.1");
+        cu.setSocketPort(port);
+        cu.setServerPort(this.port);
+        cu.setEvent(ADDRESS);
+        process.invokeClientEvent(cu);
+    }
     private void request(Events event) {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(event);
@@ -140,21 +145,27 @@ public abstract class Miner implements Subscription.Subscriber{
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+        int test = -1;
+        if(transactionHashToIndex.containsKey(hash)){
+            test = transactionHashToIndex.get(hash);
+        }
         return transactionHashToIndex.containsKey(hash);
     }
 
     protected void serveTransactionEvent(CommunicationUnit cu){
         if(!repeatedTransaction(cu.getTransaction())){
             this.transactions.add(cu.getTransaction());
-            if(this.transactions.size() == 1){
-                this.blockProducerThread.interrupt();
-            }
             try {
                 transactionHashToIndex.put(BytesConverter.byteToHexString(
-                        cu.getTransaction().getTransactionHash(),64), this.transactions.size()-1);
+                        cu.getTransaction().getTransactionHash(),64), this.transactionCounter++);
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
+            if(this.transactions.size() == 1){
+                this.blockProducerThread.interrupt();
+            }
+        }else {
+            System.out.println("repeated transaction received, discarding it...");
         }
     }
 

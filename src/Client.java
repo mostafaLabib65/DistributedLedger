@@ -169,6 +169,7 @@ public class Client implements Subscription.Subscriber {
             }
             if(!usedUTXO.contains(entry)) {
                 chosenEntries.add(entry);
+                usedUTXO.add(entry);
             }
         }
         return chosenEntries;
