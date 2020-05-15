@@ -14,7 +14,7 @@ public class ClientBlockAdder implements Runnable{
 
     private Ledger ledger;
     private Process process;
-    private boolean waitingForLedger;
+    public boolean waitingForLedger = false;
     private Block block;
     public ClientBlockAdder(ArrayList<Block> addBlocksToLedgerQueue, Ledger ledger, Process process){
         this.addBlocksToLedgerQueue = addBlocksToLedgerQueue;
@@ -24,6 +24,9 @@ public class ClientBlockAdder implements Runnable{
     }
 
 
+    public void setLedger(Ledger ledger){
+        this.ledger = ledger;
+    }
 
     @Override
     public void run() {
@@ -54,10 +57,10 @@ public class ClientBlockAdder implements Runnable{
                     }catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();
                     } catch (InterruptedException e) {
+                        waitingForLedger = false;
                         System.out.println("Block Adder: New Ledger received- try to add block");
                     }
                 }
-                waitingForLedger = false;
             }
         }
     }

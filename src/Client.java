@@ -242,7 +242,10 @@ public class Client implements Subscription.Subscriber {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    this.blockAdderThread.interrupt();
+                    blockAdder.setLedger(ledger);
+                    if(blockAdder.waitingForLedger){
+                        this.blockAdderThread.interrupt();
+                    }
                 }
                 break;
             case REQUEST_LEDGER:

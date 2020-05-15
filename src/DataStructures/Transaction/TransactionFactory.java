@@ -11,12 +11,13 @@ import java.util.ArrayList;
 
 public class TransactionFactory {
 
+    private int amount = 625000000;
     public Transaction createRewardTransactionForPublicKey(BigInteger publicExponent, BigInteger modulus) throws NoSuchAlgorithmException {
         ArrayList<byte[]> publicKeyRepresentation = new ArrayList<>();
         publicKeyRepresentation.add(publicExponent.toByteArray());
         publicKeyRepresentation.add(modulus.toByteArray());
         byte[] keyHash = SHA.getSHA(BytesConverter.concatenateByteArrays(publicKeyRepresentation));
-        return createSpecialTransactionForPublicKey(keyHash, 625000000);
+        return createSpecialTransactionForPublicKey(keyHash, amount--);
     }
 
 
