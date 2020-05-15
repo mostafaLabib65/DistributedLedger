@@ -33,6 +33,7 @@ public class BlockProducer implements Runnable {
     private List<String> hashedPublicKeys;
     private Ledger ledger;
     private Process process;
+    private Transaction[] blockTransactions;
     public  BlockProducer(ArrayList<Block> readyToMineBlocks, ArrayList<Transaction> transactions,
                           int blockSize, RSA rsa, boolean leader, Thread blockConsumer, List<String> hashedPublicKeys,
                           int numOfParticipants, Ledger ledger, Process process){
@@ -46,6 +47,7 @@ public class BlockProducer implements Runnable {
         this.hashedPublicKeys = hashedPublicKeys;
         this.ledger = ledger;
         this.process = process;
+        this.blockTransactions = new Transaction[blockSize];
     }
 
     private void initializeBlock(){
@@ -93,22 +95,25 @@ public class BlockProducer implements Runnable {
                         wait();
                     } catch (InterruptedException e) {
                         System.out.println("Block producer: transaction received start working....");
+                        this.initializeBlock();
                     }
                 }
                 Transaction temp = this.transactions.get(0);
                 this.transactions.remove(temp);
-                this.block.getTransactions()[this.transactionCounter] = temp;
+                this.blockTransactions[this.transactionCounter] = temp;
                 this.transactionCounter++;
                 if(this.transactionCounter == blockSize-1){
                     try {
                         Transaction t = f.createRewardTransactionForPublicKey(rsa.getPublicKey(), rsa.getModulus());
-                        this.block.getTransactions()[this.transactionCounter] = t;
+                        this.blockTransactions[this.transactionCounter] = t;
+                        this.block.setTransactions(blockTransactions);
+                        this.blockTransactions = new Transaction[blockSize];
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();
                     }
                     this.transactionCounter = 0;
                     try {
-                        this.block.getMerkleTreeRoot();
+                      this.block.getHeader().hashOfMerkleRoot = this.block.getMerkleTreeRoot();
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();
                     }

@@ -26,6 +26,7 @@ public class POWBlockConsumer extends Consensus {
     private Block currentMiningBlock;
     private int nonce;
     private boolean blockCorrupted = false;
+    private boolean waitingForBlocks = true;
     private ArrayList<Transaction> allTransactions;
     public void setParams(ArrayList<Block> blocks, Process process, Ledger ledger, ArrayList<Transaction> transactions){
         this.blocks = blocks;
@@ -47,57 +48,95 @@ public class POWBlockConsumer extends Consensus {
         this.receivedBlock = receivedBlock;
     }
 
+    private void waitForBlocks(){
+        try {
+            System.out.println("POW Consensus: Waiting for new blocks");
+            waitingForBlocks = true;
+            wait();
+        } catch (InterruptedException e) {
+            System.out.println("POW Consensus: Block received start working....");
+        }
+    }
+
+    private void getNewBlock(){
+        System.out.println("POW Consensus: Getting new block....");
+        waitingForBlocks = false;
+        this.currentMiningBlock = this.blocks.get(0);
+        this.blocks.remove(currentMiningBlock);
+        try {
+            currentMiningBlock.getHeader().hashOfPrevBlock = this.ledger.getLastBlockHash();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        nonce = 0;
+    }
+
+    private void startMining(){
+        System.out.println("POW Consensus: Start Mining....");
+        try {
+            do{
+                currentMiningBlock.getHeader().nonce = nonce;
+                nonce++;
+            }while (!isValidPOWBlock(currentMiningBlock, this.difficulty) && !interrupt);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void checkForDuplicateTransactions(){
+        System.out.println("POW Consensus: Checking for repeated transactions....");
+
+        Transaction[] transactions = currentMiningBlock.getTransactions();
+        for(Transaction acceptedTransaction: receivedBlock.getTransactions()){
+            int index = 0;
+            try {
+                index = currentMiningBlock.getIndexOfTransaction(acceptedTransaction);
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+            if(index != -1){
+                transactions[index] = null;
+                blockCorrupted = true;
+            }
+        }
+        if(blockCorrupted){
+            for(Transaction t: transactions){
+                if(t != null){
+                    allTransactions.add(0, t);
+                }
+            }
+        }
+    }
     @Override
     public void run() {
         while (true){
             synchronized (this){
-                while (this.blocks.size() == 0) {
+                if(this.blocks.size() == 0 ){
+                    waitForBlocks();
+                }
+                getNewBlock();
+                this.interrupt = false;
+                this.blockCorrupted = false;
+                startMining();
+                if(interrupt){
+                    checkForDuplicateTransactions();
+                }else {
+                    boolean success = false;
                     try {
-                        System.out.println("POW Consensus: Waiting for new blocks");
-                        wait();
-                    } catch (InterruptedException e) {
-                        System.out.println("POW Consensus: Block received start working....");
+                        success = this.ledger.addBlock(currentMiningBlock);
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
                     }
-                }
-                try {
-                    if(blockCorrupted){
-                        this.currentMiningBlock = this.blocks.get(0);
-                        this.blocks.remove(currentMiningBlock);
-                        currentMiningBlock.getHeader().hashOfPrevBlock = this.ledger.getLastBlockHash();
-                        nonce = 0;
-                    }
-                    this.interrupt = false;
-                    this.blockCorrupted = false;
-                    do{
-                        currentMiningBlock.getHeader().nonce = nonce;
-                        nonce++;
-                    }while (!isValidPOWBlock(currentMiningBlock, this.difficulty) && !interrupt);
-                    if(interrupt){
-                        Transaction[] transactions = currentMiningBlock.getTransactions();
-                        for(Transaction acceptedTransaction: receivedBlock.getTransactions()){
-                            int index = currentMiningBlock.getIndexOfTransaction(acceptedTransaction);
-                            if(index != -1){
-                                transactions[index] = null;
-                                blockCorrupted = true;
-                            }
-                        }
-                        if(blockCorrupted){
-                            for(Transaction t: transactions){
-                                if(t != null){
-                                    allTransactions.add(0, t);
-                                }
-                            }
-                        }
+                    if(success){
+                        System.out.println("POW Consumer: block added to ledger, start publishing it...");
+                        cu.setBlock(currentMiningBlock);
+                        this.process.invokeClientEvent(cu);
                     }else {
-                        boolean success = this.ledger.addBlock(currentMiningBlock);
-                        if(success){
-                            cu.setBlock(currentMiningBlock);
-                            this.process.invokeClientEvent(cu);
-                        }
+                        System.out.println("POW Consumer: Failed to add block to ledger...");
+
                     }
-                }catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
                 }
+
             }
         }
     }

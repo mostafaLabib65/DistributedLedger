@@ -1,13 +1,12 @@
 package DataStructures.Transaction;
 
 import Utils.BytesConverter;
-import Utils.SHA;
 
+import java.io.Serializable;
 import java.math.BigInteger;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-public class TransactionInput {
+public class TransactionInput implements Serializable {
 
     public byte[] transactionHash;
     public int outputIndex = 0;

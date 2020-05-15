@@ -41,23 +41,23 @@ public class ClientBlockAdder implements Runnable{
                 if(!waitingForLedger && addBlocksToLedgerQueue.size() != 0){
                     this.block = addBlocksToLedgerQueue.get(0);
                     addBlocksToLedgerQueue.remove(block);
+                    try {
+                        boolean success = this.ledger.addBlock(block);
+                        if(!success){
+                            CommunicationUnit cu = new CommunicationUnit();
+                            cu.setEvent(Events.REQUEST_LEDGER);
+                            process.invokeClientEvent(cu);
+                            System.out.println("Block Adder: Failed to add block Waiting for a ledger");
+                            waitingForLedger = true;
+                            wait();
+                        }
+                    }catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        System.out.println("Block Adder: New Ledger received- try to add block");
+                    }
                 }
                 waitingForLedger = false;
-                try {
-                    boolean success = this.ledger.addBlock(block);
-                    if(!success){
-                        CommunicationUnit cu = new CommunicationUnit();
-                        cu.setEvent(Events.REQUEST_LEDGER);
-                        process.invokeClientEvent(cu);
-                        System.out.println("Block Adder: Waiting for a ledger");
-                        waitingForLedger = true;
-                        wait();
-                    }
-                }catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    System.out.println("Block Adder: New Ledger received- try to add block");
-                }
             }
         }
     }

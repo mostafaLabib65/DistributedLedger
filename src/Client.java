@@ -218,6 +218,8 @@ public class Client implements Subscription.Subscriber {
     public void notify(Events events, CommunicationUnit cu) {
         switch (events) {
             case BLOCK:
+                System.out.println("Block Received");
+
                 this.addBlocksToLedgerQueue.add(cu.getBlock());
                 if(this.addBlocksToLedgerQueue.size() == 1)
                     this.blockAdderThread.interrupt();
