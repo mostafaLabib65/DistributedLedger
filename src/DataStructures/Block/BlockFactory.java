@@ -20,7 +20,7 @@ public class BlockFactory {
         for (String publicKeyHash : publicKeyHashes) {
             for(int i = 0; i < 1000; i++){
                 Transaction t = factory.createSpecialTransactionForPublicKey(
-                        BytesConverter.hexStringToByteArray(publicKeyHash), amount);
+                        BytesConverter.hexStringToByteArray(publicKeyHash), amount - i);
                 transactions.add(t);
             }
         }
