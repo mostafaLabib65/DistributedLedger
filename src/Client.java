@@ -30,7 +30,8 @@ public class Client implements Subscription.Subscriber {
     private ClientBlockAdder blockAdder;
     private Thread blockAdderThread;
     protected ArrayList<Block> addBlocksToLedgerQueue = new ArrayList<>();
-    UTXOEntry[] UTXOSet;
+    private UTXOEntry[] UTXOSet;
+    private Set<UTXOEntry> usedUTXO;
 
     private BigInteger publicKey;
     private String publicKeyString;
@@ -53,11 +54,13 @@ public class Client implements Subscription.Subscriber {
         busyWaiting();
         sendTransactions();
     }
+
     private void initializeBlockAdderToLedgerService(){
         this.blockAdder = new ClientBlockAdder(this.addBlocksToLedgerQueue, this.ledger, this.process);
         this.blockAdderThread = new Thread(this.blockAdder);
         this.blockAdderThread.start();
     }
+
     private void busyWaiting() {
         System.out.println("Waiting for ledger and public keys");
         while (ledger == null || hashedPublicKeys.isEmpty()){
@@ -89,26 +92,23 @@ public class Client implements Subscription.Subscriber {
 
     private Transaction createTransaction() {
 
-
-
         String publicKeyString = getHashedPublicKey();
 
         if(UTXOSet == null || UTXOSet.length == 0) {
             return null;
         }
 
-        int numOfUTXOChosen = rand.nextInt(UTXOSet.length);
+        List<UTXOEntry> chosenEntries = getNumberOfUTXOChosen();
 
-        int[] numberOfUTXOEntriesChosen = getNumberOfUTXOChosen(UTXOSet.length, numOfUTXOChosen);
         int numberOfOutputs = rand.nextInt(1) + 1; //number of outputs 1 or 2
 
-        Transaction transaction = new NormalTransaction(numberOfUTXOEntriesChosen.length, numberOfOutputs);
+        Transaction transaction = new NormalTransaction(chosenEntries.size(), numberOfOutputs);
 
-        TransactionInput[] transactionInputs = new TransactionInput[numberOfUTXOEntriesChosen.length];
+        TransactionInput[] transactionInputs = new TransactionInput[chosenEntries.size()];
         long UTXOSummation = 0;
-        for (int i = 0; i < numberOfUTXOEntriesChosen.length; i++) {
+        for (int i = 0; i < chosenEntries.size(); i++) {
 
-            UTXOEntry entry = UTXOSet[numberOfUTXOEntriesChosen[i]];
+            UTXOEntry entry = chosenEntries.get(i);
             UTXOSummation += entry.transactionOutput.amount;
 
             TransactionInput input = new TransactionInput();
@@ -154,30 +154,29 @@ public class Client implements Subscription.Subscriber {
         } else {
             throw new RuntimeException("Incorrect number of outputs");
         }
-        removeIndicesFromUTXOSet(numberOfUTXOEntriesChosen);
         return transaction;
     }
 
-    private void removeIndicesFromUTXOSet(int[] numberOfUTXOEntriesChosen) {
-        List<UTXOEntry> list = new ArrayList<>(Arrays.asList(UTXOSet));
-        for (int i = 0; i < numberOfUTXOEntriesChosen.length; i++) {
-            list.set(numberOfUTXOEntriesChosen[i], null);
-        }
-        while(list.remove(null));
-        UTXOSet =  Arrays.copyOf(list.toArray(), list.toArray().length, UTXOEntry[].class);
-    }
+    private List<UTXOEntry> getNumberOfUTXOChosen() {
 
-    private int[] getNumberOfUTXOChosen(int bound, int sizeOfArray) {
-        return rand.ints(0, bound)
-                .boxed()
-                .distinct()
-                .limit(sizeOfArray)
-                .mapToInt((Integer i) -> i.intValue())
-                .toArray();
+        int bound = rand.nextInt(UTXOSet.length - 1) + 1;
+
+        List<UTXOEntry> chosenEntries = new ArrayList<>();
+
+        for(UTXOEntry entry : UTXOSet) {
+            if(chosenEntries.size() == bound) {
+                break;
+            }
+            if(!usedUTXO.contains(entry)) {
+                chosenEntries.add(entry);
+            }
+        }
+        return chosenEntries;
     }
 
     private void initialize() {
 
+        usedUTXO = new HashSet<>();
         rand = new Random(System.currentTimeMillis());
 
         try {
@@ -224,6 +223,11 @@ public class Client implements Subscription.Subscriber {
                 System.out.println("Block Received");
 
                 this.addBlocksToLedgerQueue.add(cu.getBlock());
+                try {
+                    UTXOSet = ledger.getAvailableUTXOsForPublicKey(getHashedPublicKey());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 if(this.addBlocksToLedgerQueue.size() == 1)
                     this.blockAdderThread.interrupt();
                 break;
