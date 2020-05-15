@@ -187,9 +187,10 @@ public class Client implements Subscription.Subscriber {
         rand = new Random(System.currentTimeMillis());
 
         try {
-            String address = "127.0.0.1";
+            String address = "192.168.1.7";
+            String globalAddress = "156.212.49.118";
             InetAddress inetAddress = InetAddress.getByName(address);
-            process = new Process(port, inetAddress);
+            process = new Process(port, inetAddress, globalAddress);
             process.start();
 
             ConnectionInitializer ci = new ConnectionInitializer(process);

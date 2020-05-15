@@ -104,9 +104,9 @@ public abstract class Miner implements Subscription.Subscriber{
     private void initializeNetwork() {
         System.out.println("Init the network");
         try {
-
+            String globalAddress = "156.212.49.118";
             InetAddress inetAddress = InetAddress.getByName(address);
-            process = new Process(port, inetAddress);
+            process = new Process(port, inetAddress, globalAddress);
             process.start();
 
             ConnectionInitializer ci = new ConnectionInitializer(process);

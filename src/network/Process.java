@@ -18,8 +18,9 @@ public class Process {
     private MQ processClientMQ;
     private InetAddress address;
     private int port;
+    private String globalAddress;
 
-    public Process(int port, InetAddress address){
+    public Process(int port, InetAddress address, String globalAddress){
         MQ serverProcessMQ = new MQ(Configs.MAX_MQ_LENGTH);
         processClientMQ = new MQ(Configs.MAX_MQ_LENGTH);
         serverRunnable = new ServerRunnable(port, address, serverProcessMQ);
@@ -27,6 +28,7 @@ public class Process {
         processListener = new ProcessListener(serverProcessMQ, this);
         this.address = address;
         this.port = port;
+        this.globalAddress = globalAddress;
     }
 
 
@@ -50,7 +52,7 @@ public class Process {
     }
 
     public String getAddress() {
-        return address.getHostAddress();
+        return globalAddress;
     }
 
     public int getPort() {
