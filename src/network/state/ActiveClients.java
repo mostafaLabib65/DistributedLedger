@@ -20,7 +20,7 @@ public class ActiveClients {
     }
 
     public void addClient(String address, int port){
-        activeClientsHashMap.put(address, port);
+        activeClientsHashMap.put(address + ":" + port, port);
     }
 
     public Set<Map.Entry<String, Integer>> getAllActiveClients() {

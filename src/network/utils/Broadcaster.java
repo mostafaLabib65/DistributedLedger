@@ -15,7 +15,7 @@ public class Broadcaster {
         Set<Map.Entry<String, Integer>> clientSockets = ActiveClients.getActiveClients().getAllActiveClients();
         for (Map.Entry<String, Integer> clientSocket : clientSockets) {
             try {
-                Socket socket = new Socket(clientSocket.getKey(), clientSocket.getValue());
+                Socket socket = new Socket(clientSocket.getKey().split(":")[0], clientSocket.getValue());
                 ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
                 outputStream.writeObject(cu);
                 socket.close();
