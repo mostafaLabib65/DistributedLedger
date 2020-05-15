@@ -39,7 +39,7 @@ public class TransientPartitionTree implements Serializable {
 
     public boolean addBlock(Block block) {
         try {
-            String nodeHash = BytesConverter.byteToHexString(block.getMerkleTreeRoot(), 64);
+            String nodeHash = BytesConverter.byteToHexString(block.getHash(), 64);
             String parentHash = BytesConverter.byteToHexString(block.getPreviousHash(), 64);
             if (root == null) {
                 root = new BlockNode(block);
@@ -49,7 +49,6 @@ public class TransientPartitionTree implements Serializable {
             } else {
                 if (isValidBlockForLedger(block)) {
                     BlockNode parent = nodes.get(parentHash);
-
                     BlockNode node = parent.addNode(block);
                     nodes.put(nodeHash, node);
                     updateLongestLeaf(node);

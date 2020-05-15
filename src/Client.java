@@ -88,7 +88,10 @@ public class Client implements Subscription.Subscriber {
     }
 
     private Transaction createTransaction() {
-        String publicKeyString = BytesConverter.byteToHexString(publicKey.toByteArray(), 64);
+
+
+
+        String publicKeyString = getHashedPublicKey();
 
         if(UTXOSet == null || UTXOSet.length == 0) {
             return null;
