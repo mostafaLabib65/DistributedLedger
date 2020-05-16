@@ -16,7 +16,7 @@ public class Ledger implements Serializable {
     public Ledger() {
         baseLedger = new LedgerPartition(0);
         partitionTree = new TransientPartitionTree();
-        transientLedgerMaxLength = 2;
+        transientLedgerMaxLength = 10;
     }
 
     public boolean addBlock(Block block) throws Exception {
