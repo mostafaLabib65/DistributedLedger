@@ -144,6 +144,8 @@ public class POWBlockConsumer extends Consensus {
                         success = this.ledger.addBlock(currentMiningBlock);
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
                     }
                     if(success){
                         System.out.println("POW Consumer: block added to ledger, start publishing it...");

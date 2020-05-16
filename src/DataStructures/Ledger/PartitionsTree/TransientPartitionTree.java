@@ -25,11 +25,19 @@ public class TransientPartitionTree implements Serializable {
     }
 
 
-    public Block removeFirstBlock() {
+    public Block removeFirstBlock() throws Exception {
+        if (root == null)
+            throw new Exception("Transition Ledger is Empty!");
+
         Block rootBlock = root.getBlock();
-        BlockNode candidateNode = this.getNextCandidateNodeFromRoot(root, longestLeaf);
-        root.removeChild(candidateNode);
-        candidateNode.setParent(null);
+        BlockNode candidateNode;
+        if (!root.equals(longestLeaf)) {
+            candidateNode = this.getNextCandidateNodeFromRoot(root, longestLeaf);
+            root.removeChild(candidateNode);
+            candidateNode.setParent(null);
+        } else {
+            candidateNode = null;
+        }
         Thread pruner = new Thread(new TreePruner(root, nodes));
         pruner.start();
         root = candidateNode;
@@ -40,7 +48,6 @@ public class TransientPartitionTree implements Serializable {
     public boolean addBlock(Block block) {
         try {
             String nodeHash = BytesConverter.byteToHexString(block.getHash(), 64);
-            String parentHash = BytesConverter.byteToHexString(block.getPreviousHash(), 64);
             if (root == null) {
                 root = new BlockNode(block);
                 longestLeaf = root;
@@ -48,6 +55,7 @@ public class TransientPartitionTree implements Serializable {
                 return true;
             } else {
                 if (isValidBlockForLedger(block)) {
+                    String parentHash = BytesConverter.byteToHexString(block.getPreviousHash(), 64);
                     BlockNode parent = nodes.get(parentHash);
                     BlockNode node = parent.addNode(block);
                     nodes.put(nodeHash, node);
@@ -63,7 +71,7 @@ public class TransientPartitionTree implements Serializable {
     }
 
     public int getMaxBranchDepth() {
-        return longestLeaf == null ? 0 : longestLeaf.getHeight() - root.getHeight();
+        return longestLeaf == null || root == null ? 0 : longestLeaf.getHeight() - root.getHeight() + 1;
     }
 
     public UTXOEntry[] getLongestBranchUTXOSet(String publicKeyHash) throws Exception {
@@ -133,7 +141,7 @@ public class TransientPartitionTree implements Serializable {
         }
     }
 
-    public static void main(String[] args) throws NoSuchAlgorithmException {
+    public static void main(String[] args) throws Exception {
         TransactionInput i1 = new TransactionInput();
         TransactionInput i2 = new TransactionInput();
 
@@ -217,10 +225,28 @@ public class TransientPartitionTree implements Serializable {
 
         Transaction t2 = new NormalTransaction(2, 3);
 
+        Block b1 = new Block(3);
+        Block b2 = new Block(3);
+
+        BlockHeader h4 = new BlockHeader();
+        BlockHeader h3 = new BlockHeader();
+
+        h3.hashOfPrevBlock = "test".getBytes();
+        h3.hashOfMerkleRoot = "merkle".getBytes();
+        h3.nonce = 1;
+        b1.setHeader(h3);
+        b1.setTransactions( new Transaction[]{t0});
+
+
+        h4.hashOfPrevBlock = "test".getBytes();
+        h4.hashOfMerkleRoot = "merkle".getBytes();
+        h4.nonce = 1;
+        b2.setHeader(h4);
+        b2.setTransactions( new Transaction[]{t1});
+        b2.setHashOfPreviousBlock(b1.getHash());
 
         TransientPartitionTree tree = new TransientPartitionTree();
         // Block 1
-        Block b1 = new Block(0);
         BlockHeader h1 = new BlockHeader();
         h1.hashOfPrevBlock = new byte[1];
         h1.hashOfPrevBlock[0] = 1;
@@ -231,9 +257,8 @@ public class TransientPartitionTree implements Serializable {
         tree.addBlock(b1);
 
         // Block 2
-        Block b2 = new Block(0);
         BlockHeader h2 = new BlockHeader();
-        h2.hashOfPrevBlock = b1.getMerkleTreeRoot();
+        h2.hashOfPrevBlock = b1.getHash();
         b2.setHeader(h2);
 
         b2.setTransactions(new Transaction[]{t0, t1});
@@ -242,8 +267,8 @@ public class TransientPartitionTree implements Serializable {
 
         // Block 3
         Block b3 = new Block(0);
-        BlockHeader h3 = new BlockHeader();
-        h3.hashOfPrevBlock = b1.getMerkleTreeRoot();
+        BlockHeader h5 = new BlockHeader();
+        h3.hashOfPrevBlock = b1.getHash();
         b3.setHeader(h3);
 
         b3.setTransactions(new Transaction[]{t1});
@@ -253,8 +278,8 @@ public class TransientPartitionTree implements Serializable {
 
         // Block 4
         Block b4 = new Block(0);
-        BlockHeader h4 = new BlockHeader();
-        h4.hashOfPrevBlock = b2.getMerkleTreeRoot();
+        BlockHeader h6 = new BlockHeader();
+        h4.hashOfPrevBlock = b2.getHash();
         b4.setHeader(h4);
         b4.setTransactions(new Transaction[]{t1, t0, t1});
 
@@ -265,6 +290,7 @@ public class TransientPartitionTree implements Serializable {
         tree.removeFirstBlock();
 
         System.out.println("ledger length: " + tree.getMaxBranchDepth());
+
     }
 
 }

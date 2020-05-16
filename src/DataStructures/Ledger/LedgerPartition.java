@@ -67,7 +67,7 @@ public class LedgerPartition implements Serializable {
     }
 
 
-    public static void main(String[] args) throws NoSuchAlgorithmException {
+    public static void main(String[] args) throws Exception {
 
         Block b1 = new Block(3);
         Block b2 = new Block(3);
@@ -219,8 +219,7 @@ public class LedgerPartition implements Serializable {
         b4.setHashOfPreviousBlock(b2.getHash());
 
 
-
-
+        System.out.println("Ledger Partition");
         System.out.println(partition.addBlock(b1));
         System.out.println(partition.addBlock(b2));
         System.out.println(partition.addBlock(b3));
@@ -231,7 +230,7 @@ public class LedgerPartition implements Serializable {
         Ledger ledger = new Ledger();
 
 
-
+        System.out.println("Ledger Tree");
         System.out.println(ledger.addBlock(b1));
         System.out.println(ledger.addBlock(b2));
         System.out.println(ledger.addBlock(b3));

@@ -16,10 +16,10 @@ public class Ledger implements Serializable {
     public Ledger() {
         baseLedger = new LedgerPartition(0);
         partitionTree = new TransientPartitionTree();
-        transientLedgerMaxLength = 10;
+        transientLedgerMaxLength = 2;
     }
 
-    public boolean addBlock(Block block) throws NoSuchAlgorithmException {
+    public boolean addBlock(Block block) throws Exception {
         if (!partitionTree.addBlock(block))
             return false;
 

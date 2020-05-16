@@ -88,6 +88,8 @@ public class BlockProducer implements Runnable {
                         this.sendLedger();
                     } catch (NoSuchAlgorithmException ex) {
                         ex.printStackTrace();
+                    } catch (Exception exception) {
+                        System.out.println(exception.getMessage());
                     }
                 }
             }

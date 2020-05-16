@@ -42,6 +42,8 @@ public class ClientBlockAdder implements Runnable{
             e.printStackTrace();
         } catch (InterruptedException e) {
             System.out.println("Block Adder: New Ledger received- try to add block");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
 
