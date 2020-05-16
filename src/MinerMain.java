@@ -7,6 +7,7 @@ public class MinerMain {
 
     public static void main(String[] args){
         Consensus consensus = new POWBlockConsumer(2);
-        Miner miner = new POWMiner(consensus, 2, "127.0.0.1", 5000, true, 2);
+        Miner miner = new POWMiner(consensus, 3, "127.0.0.1", Integer.parseInt(args[0]),
+                Boolean.parseBoolean(args[1]), 2);
     }
 }

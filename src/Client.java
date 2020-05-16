@@ -12,7 +12,6 @@ import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 import network.state.Subscription;
-import network.utils.ConnectionInitializer;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -165,7 +164,7 @@ public class Client implements Subscription.Subscriber {
 
     private List<UTXOEntry> getNumberOfUTXOChosen() {
 
-        int bound = rand.nextInt(10);
+        int bound = rand.nextInt(10) + 5;
 
         List<UTXOEntry> chosenEntries = new ArrayList<>();
 
@@ -187,14 +186,14 @@ public class Client implements Subscription.Subscriber {
         rand = new Random(System.currentTimeMillis());
 
         try {
-            String address = "192.168.1.7";
-            String globalAddress = "156.212.49.118";
+            String address = "127.0.0.1";
+            String globalAddress = "127.0.0.1";
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress, globalAddress);
             process.start();
 
-            ConnectionInitializer ci = new ConnectionInitializer(process);
-            ci.init();
+//            ConnectionInitializer ci = new ConnectionInitializer(process);
+//            ci.init();
 
             createKeys();
             sendPublickey();
@@ -245,7 +244,7 @@ public class Client implements Subscription.Subscriber {
             case RECEIVE_LEDGER:
                 System.out.println("Received Ledger");
 
-                if(ledger == null || cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
+                if(ledger == null || blockAdder.waitingForLedger){
                     System.out.println("Ledger accepted");
                     ledger = cu.getLedger();
                     try {
@@ -254,9 +253,7 @@ public class Client implements Subscription.Subscriber {
                         e.printStackTrace();
                     }
                     blockAdder.setLedger(ledger);
-                    if(blockAdder.waitingForLedger){
-                        this.blockAdderThread.interrupt();
-                    }
+                    this.blockAdderThread.interrupt();
                 }
                 break;
             case REQUEST_LEDGER:

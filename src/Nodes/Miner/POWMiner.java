@@ -4,8 +4,6 @@ import Nodes.Consensus.Consensus;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 
-import static java.lang.Thread.sleep;
-
 public class POWMiner extends Miner{
     public POWMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants) {
         super(blockConsumer, blockSize, address, port, leader, numOfParticipants);
@@ -20,8 +18,12 @@ public class POWMiner extends Miner{
                 serveTransactionEvent(cu);
                 break;
             case RECEIVE_LEDGER:
-                if(cu.getLedger().getLedgerDepth() >= ledger.getLedgerDepth()){
+                System.out.println("POW Miner: received Ledger");
+                if(ledger == null || this.blockAdder.waitingForLedger){
+                    System.out.println("POW Miner: Accepting ledger");
                     ledger = cu.getLedger();
+                    this.blockConsumer.setLedger(ledger);
+                    this.blockAdder.setLedger(ledger);
                     this.blockAdderThread.interrupt();
                 }
                 break;
@@ -44,9 +46,10 @@ public class POWMiner extends Miner{
             case RECEIVE_PUBLICKEYS:
                 System.out.println("POW Miner: received public key");
                 hashedPublicKeys.add(cu.getHashedPublicKey());
-                if(hashedPublicKeys.size() == numOfParticipants-1)
+                if(hashedPublicKeys.size() == numOfParticipants-1){
                     hashedPublicKeys.add(getHashedPublicKey());
-                this.blockProducerThread.interrupt();
+                    this.blockProducerThread.interrupt();
+                }
                 break;
         }
     }

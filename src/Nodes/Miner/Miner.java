@@ -13,7 +13,6 @@ import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 import network.state.Subscription;
-import network.utils.ConnectionInitializer;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -23,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static network.events.Events.*;
 
@@ -49,6 +49,7 @@ public abstract class Miner implements Subscription.Subscriber{
     protected int numOfParticipants;
     protected ArrayList<Block> addBlocksToLedgerQueue = new ArrayList<>();
     private int transactionCounter = 0;
+    private ReentrantLock readyToMineBlocksQueueLock = new ReentrantLock();
     public Miner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants){
         this.address = address;
         this.port = port;
@@ -58,10 +59,11 @@ public abstract class Miner implements Subscription.Subscriber{
         this.numOfParticipants = numOfParticipants;
         initializeNetwork();
         initializeSubscriptions();
-        ledger = new Ledger();
+        if(leader)
+            ledger = new Ledger();
         initializeBlockConsumerService();
-        initializeBlockAdderToLedgerService();
         initializeBlockProducerService();
+        initializeBlockAdderToLedgerService();
         if(leader){
             request(REQUEST_PUBLICKEYS);
         }
@@ -77,8 +79,8 @@ public abstract class Miner implements Subscription.Subscriber{
 
     private void initializeBlockProducerService(){
         this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize,
-                rsa, leader, this.blockConsumerThread,
-                this.hashedPublicKeys, this.numOfParticipants, this.ledger, this.process);
+                rsa, leader, this.blockConsumerThread, this.hashedPublicKeys,
+                this.numOfParticipants, this.ledger, this.process, this.readyToMineBlocksQueueLock);
         this.blockProducerThread = new Thread(this.blockProducer);
         blockProducerThread.start();
         System.out.println("Init Block Producer Service");
@@ -86,7 +88,7 @@ public abstract class Miner implements Subscription.Subscriber{
 
     private void initializeBlockConsumerService(){
         System.out.println("Init Block Consumer Service");
-        this.blockConsumer.setParams(this.readyToMineBlocks, this.process, this.ledger, this.transactions);
+        this.blockConsumer.setParams(this.readyToMineBlocks, this.process, this.ledger, this.transactions, this.readyToMineBlocksQueueLock);
         this.blockConsumerThread = new Thread(this.blockConsumer);
         blockConsumerThread.start();
     }
@@ -104,16 +106,19 @@ public abstract class Miner implements Subscription.Subscriber{
     private void initializeNetwork() {
         System.out.println("Init the network");
         try {
-            String globalAddress = "156.212.49.118";
+            String globalAddress = "192.168.1.10";
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress, globalAddress);
             process.start();
 
-            ConnectionInitializer ci = new ConnectionInitializer(process);
-            ci.init();
+//            ConnectionInitializer ci = new ConnectionInitializer(process);
+//            ci.init();
 
-//            startConnecting(4000);
-//            startConnecting(4001);
+            startConnecting(4000);
+            startConnecting(4001);
+            if(leader){
+                startConnecting(5001);
+            }
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }

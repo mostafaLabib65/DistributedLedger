@@ -10,6 +10,8 @@ import network.events.Events;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
+import static java.lang.System.currentTimeMillis;
+
 public class BlockAdder implements Runnable{
 
     private ArrayList<Block> addBlocksToLedgerQueue;
@@ -17,7 +19,7 @@ public class BlockAdder implements Runnable{
     private BlockProducer blockProducer;
     private Ledger ledger;
     private Process process;
-    private boolean waitingForLedger;
+    public boolean waitingForLedger;
     private Block block;
     public BlockAdder(ArrayList<Block> addBlocksToLedgerQueue, Consensus blockConsumer, BlockProducer blockProducer, Ledger ledger, Process process){
         this.addBlocksToLedgerQueue = addBlocksToLedgerQueue;
@@ -28,9 +30,34 @@ public class BlockAdder implements Runnable{
     }
 
 
+    public void setLedger(Ledger ledger){
+        this.ledger = ledger;
+    }
 
+    private void addBlockToLedger(Block block){
+        try {
+            boolean success = this.ledger.addBlock(block);
+            if(success){
+                this.blockConsumer.StopMiningCurrentBlock(block);
+                this.blockProducer.setInterrupt(block);
+                System.out.println("Block Adder.............................." + currentTimeMillis() + " Ledger length: " + ledger.getLedgerDepth());
+            }else {
+                CommunicationUnit cu = new CommunicationUnit();
+                cu.setEvent(Events.REQUEST_LEDGER);
+                process.invokeClientEvent(cu);
+                System.out.println("Block Adder: Waiting for new ledger");
+                waitingForLedger = true;
+                wait();
+            }
+        }catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            System.out.println("Block Adder: New Ledger received- try to add block");
+        }
+    }
     @Override
     public void run() {
+        Block block = null;
         while (true){
             synchronized (this){
                 if(addBlocksToLedgerQueue.size() == 0) {
@@ -42,28 +69,14 @@ public class BlockAdder implements Runnable{
                         System.out.println("BlockAdderThread: Block received start adding to ledger");
                     }
                 }
-                if(!waitingForLedger){
-                    this.block = addBlocksToLedgerQueue.get(0);
+                if(!waitingForLedger && addBlocksToLedgerQueue.size() != 0){
+                    block  = addBlocksToLedgerQueue.get(0);
                     addBlocksToLedgerQueue.remove(block);
+                    addBlockToLedger(block);
                 }
-                waitingForLedger = false;
-                try {
-                    boolean success = this.ledger.addBlock(block);
-                    if(success){
-                        this.blockConsumer.StopMiningCurrentBlock(block);
-                        this.blockProducer.setInterrupt(block);
-                    }else {
-                        CommunicationUnit cu = new CommunicationUnit();
-                        cu.setEvent(Events.REQUEST_LEDGER);
-                        process.invokeClientEvent(cu);
-                        System.out.println("Block Adder: Waiting for a ledger");
-                        waitingForLedger = true;
-                        wait();
-                    }
-                }catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    System.out.println("Block Adder: New Ledger received- try to add block");
+                if(waitingForLedger){
+                    waitingForLedger = false;
+                    addBlockToLedger(block);
                 }
             }
         }

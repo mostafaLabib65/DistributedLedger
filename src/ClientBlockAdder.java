@@ -15,7 +15,6 @@ public class ClientBlockAdder implements Runnable{
     private Ledger ledger;
     private Process process;
     public boolean waitingForLedger = false;
-    private Block block;
     public ClientBlockAdder(ArrayList<Block> addBlocksToLedgerQueue, Ledger ledger, Process process){
         this.addBlocksToLedgerQueue = addBlocksToLedgerQueue;
 
@@ -28,8 +27,27 @@ public class ClientBlockAdder implements Runnable{
         this.ledger = ledger;
     }
 
+    private void addBlockToLedger(Block block){
+        try {
+            boolean success = this.ledger.addBlock(block);
+            if(!success){
+                CommunicationUnit cu = new CommunicationUnit();
+                cu.setEvent(Events.REQUEST_LEDGER);
+                process.invokeClientEvent(cu);
+                System.out.println("Block Adder: Failed to add block Waiting for a ledger");
+                waitingForLedger = true;
+                wait();
+            }
+        }catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            System.out.println("Block Adder: New Ledger received- try to add block");
+        }
+    }
+
     @Override
     public void run() {
+        Block block = null;
         while (true){
             synchronized (this){
                 if(addBlocksToLedgerQueue.size() == 0) {
@@ -42,24 +60,13 @@ public class ClientBlockAdder implements Runnable{
                     }
                 }
                 if(!waitingForLedger && addBlocksToLedgerQueue.size() != 0){
-                    this.block = addBlocksToLedgerQueue.get(0);
+                    block  = addBlocksToLedgerQueue.get(0);
                     addBlocksToLedgerQueue.remove(block);
-                    try {
-                        boolean success = this.ledger.addBlock(block);
-                        if(!success){
-                            CommunicationUnit cu = new CommunicationUnit();
-                            cu.setEvent(Events.REQUEST_LEDGER);
-                            process.invokeClientEvent(cu);
-                            System.out.println("Block Adder: Failed to add block Waiting for a ledger");
-                            waitingForLedger = true;
-                            wait();
-                        }
-                    }catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        waitingForLedger = false;
-                        System.out.println("Block Adder: New Ledger received- try to add block");
-                    }
+                    addBlockToLedger(block);
+                }
+                if(waitingForLedger){
+                    waitingForLedger = false;
+                    addBlockToLedger(block);
                 }
             }
         }

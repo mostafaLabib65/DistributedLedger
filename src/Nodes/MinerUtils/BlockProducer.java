@@ -14,6 +14,7 @@ import network.events.Events;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BlockProducer implements Runnable {
 
@@ -34,9 +35,10 @@ public class BlockProducer implements Runnable {
     private Ledger ledger;
     private Process process;
     private Transaction[] blockTransactions;
+    private ReentrantLock readyToMineBlocksQueueLock;
     public  BlockProducer(ArrayList<Block> readyToMineBlocks, ArrayList<Transaction> transactions,
                           int blockSize, RSA rsa, boolean leader, Thread blockConsumer, List<String> hashedPublicKeys,
-                          int numOfParticipants, Ledger ledger, Process process){
+                          int numOfParticipants, Ledger ledger, Process process, ReentrantLock readyToMineBlocksQueueLock){
         this.readyToMineBlocks = readyToMineBlocks;
         this.transactions = transactions;
         this.blockSize = blockSize;
@@ -48,6 +50,7 @@ public class BlockProducer implements Runnable {
         this.ledger = ledger;
         this.process = process;
         this.blockTransactions = new Transaction[blockSize];
+        this.readyToMineBlocksQueueLock = readyToMineBlocksQueueLock;
     }
 
     private void initializeBlock(){
@@ -117,13 +120,16 @@ public class BlockProducer implements Runnable {
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();
                     }
+                    readyToMineBlocksQueueLock.lock();
                     this.readyToMineBlocks.add(this.block);
                     if(readyToMineBlocks.size() == 1){
                         blockConsumer.interrupt();
                     }
+                    readyToMineBlocksQueueLock.unlock();
                     this.initializeBlock();
                 }
                 if(this.interrupted){
+                    readyToMineBlocksQueueLock.lock();
                     for(Block b: readyToMineBlocks){
                         boolean corrupted = false;
                         for(Transaction t: receivedBlock.getTransactions()){
@@ -145,6 +151,7 @@ public class BlockProducer implements Runnable {
                             readyToMineBlocks.remove(b);
                         }
                     }
+                    readyToMineBlocksQueueLock.unlock();
                     this.interrupted = false;
                 }
             }

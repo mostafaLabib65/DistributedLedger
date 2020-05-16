@@ -8,10 +8,13 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Broadcaster {
+    private static ReentrantLock broadcastLock = new ReentrantLock();
 
     public static void broadcast(CommunicationUnit cu){
+//        broadcastLock.lock();
         Set<Map.Entry<String, Integer>> clientSockets = ActiveClients.getActiveClients().getAllActiveClients();
         for (Map.Entry<String, Integer> clientSocket : clientSockets) {
             try {
@@ -24,5 +27,6 @@ public class Broadcaster {
                 e.printStackTrace();
             }
         }
+//        broadcastLock.unlock();
     }
 }

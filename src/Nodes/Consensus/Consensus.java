@@ -6,6 +6,7 @@ import DataStructures.Transaction.Transaction;
 import network.Process;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public abstract class Consensus implements Runnable {
@@ -15,7 +16,8 @@ public abstract class Consensus implements Runnable {
 
     }
 
-    public void setParams(ArrayList<Block> blocks, Process process, Ledger ledger, ArrayList<Transaction> transactions){
+    public void setParams(ArrayList<Block> blocks, Process process, Ledger ledger, ArrayList<Transaction> transactions,
+                          ReentrantLock readyToMineBlocksQueueLock){
 
     }
     public void setParams(ArrayList<Block> blocks, Process process, Ledger ledger){
@@ -24,4 +26,7 @@ public abstract class Consensus implements Runnable {
     public void StopMiningCurrentBlock(Block block){
     }
 
+    public void setLedger(Ledger ledger) {
+
+    }
 }
