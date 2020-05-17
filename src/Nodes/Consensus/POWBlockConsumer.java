@@ -59,11 +59,11 @@ public class POWBlockConsumer extends Consensus {
 
     private void waitForBlocks(){
         try {
-            System.out.println("POW Consensus: Waiting for new blocks");
+            System.out.println("POW Consumer: Waiting for new blocks");
             waitingForBlocks = true;
             wait();
         } catch (InterruptedException e) {
-            System.out.println("POW Consensus: Block received start working....");
+            System.out.println("POW Consumer: Block received start working....");
         }
     }
 
@@ -82,7 +82,7 @@ public class POWBlockConsumer extends Consensus {
     }
 
     private void startMining(){
-        System.out.println("POW Consensus: Start Mining....");
+        System.out.println("POW Consumer: Start Mining....");
         try {
             do{
                 currentMiningBlock.getHeader().nonce = nonce;
@@ -94,7 +94,7 @@ public class POWBlockConsumer extends Consensus {
     }
 
     private void checkForDuplicateTransactions(){
-        System.out.println("POW Consensus: Checking for repeated transactions....");
+        System.out.println("POW Consumer: Checking for repeated transactions....");
 
         Transaction[] transactions = currentMiningBlock.getTransactions();
         for(Transaction acceptedTransaction: receivedBlock.getTransactions()){
@@ -145,7 +145,7 @@ public class POWBlockConsumer extends Consensus {
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        System.out.println("POW Consumer: 148" + e.getMessage());
                     }
                     if(success){
                         System.out.println("POW Consumer: block added to ledger, start publishing it...");

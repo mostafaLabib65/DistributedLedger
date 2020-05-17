@@ -5,6 +5,8 @@ import DataStructures.Transaction.NormalTransaction;
 import DataStructures.Transaction.Transaction;
 import DataStructures.Transaction.TransactionInput;
 import DataStructures.Transaction.TransactionOutput;
+import Nodes.MinerUtils.Configs;
+import Nodes.MinerUtils.VotingUnit;
 import Utils.BytesConverter;
 import Utils.RSA;
 import Utils.SHA;
@@ -20,6 +22,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import static java.lang.Thread.sleep;
+import static network.events.Events.BFT_RECEIVE_VOTE;
 
 public class Client implements Subscription.Subscriber {
 
@@ -42,6 +45,25 @@ public class Client implements Subscription.Subscriber {
     private Random rand;
     private List<String> transactionHash = new LinkedList<>();
     private int transactionCounter = 0;
+    private VotingUnit votingUnit;
+    private int numOfParticipants;
+    public Client(int port, int numOfParticipants) {
+        this.port = port;
+        this.numOfParticipants = numOfParticipants;
+        Subscription.getSubscription().subscribe(Events.BLOCK, this);
+        Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
+        Subscription.getSubscription().subscribe(Events.RECEIVE_LEDGER, this);
+        Subscription.getSubscription().subscribe(Events.PUBLISH_PUBLICKEY, this);
+        Subscription.getSubscription().subscribe(Events.REQUEST_PUBLICKEYS, this);
+        Subscription.getSubscription().subscribe(Events.RECEIVE_PUBLICKEYS, this);
+        Subscription.getSubscription().subscribe(Events.BFT_REQUEST_VOTE, this);
+        Subscription.getSubscription().subscribe(Events.BFT_RECEIVE_VOTE, this);
+        initialize();
+        initializeBlockAdderToLedgerService();
+        busyWaiting();
+        sendTransactions();
+    }
+
     public Client(int port) {
         this.port = port;
         Subscription.getSubscription().subscribe(Events.BLOCK, this);
@@ -87,7 +109,11 @@ public class Client implements Subscription.Subscriber {
                     System.out.println("Transaction was sent");
                 }
             }
-//            sleep(100);
+            try {
+                sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }while (transaction != null);
         System.out.println("Finished sending transactions");
     }
@@ -225,6 +251,36 @@ public class Client implements Subscription.Subscriber {
         cu.setTransaction(transaction);
         process.invokeClientEvent(cu);
     }
+    protected void addBlockToQueue(Configs result){
+        if(result == Configs.ACCEPTED){
+            this.addBlocksToLedgerQueue.add(votingUnit.getBlock());
+            if(this.addBlocksToLedgerQueue.size() == 1){
+                this.blockAdderThread.interrupt();
+            }
+        }
+    }
+
+    private void request_vote(Block block){
+        CommunicationUnit cu = new CommunicationUnit();
+        cu.setEvent(BFT_RECEIVE_VOTE);
+        votingUnit = new VotingUnit(block, numOfParticipants);
+        try {
+            boolean canBeAdded = ledger.isValidBlockForLedger(block);
+            Configs result = votingUnit.addVote(canBeAdded);
+            cu.setBFTVote(canBeAdded);
+            process.invokeClientEvent(cu);
+            addBlockToQueue(result);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void receive_vote(boolean vote){
+        if(votingUnit != null){
+            Configs result = votingUnit.addVote(vote);
+            addBlockToQueue(result);
+        }
+    }
 
     @Override
     public void notify(Events events, CommunicationUnit cu) {
@@ -256,6 +312,17 @@ public class Client implements Subscription.Subscriber {
                     this.blockAdderThread.interrupt();
                 }
                 break;
+
+            case BFT_REQUEST_VOTE:
+                System.out.println("Received Request for vote");
+                this.request_vote(cu.getBlock());
+                break;
+
+            case BFT_RECEIVE_VOTE:
+                System.out.println("Received new vote");
+                this.receive_vote(cu.getBFTVote());
+                break;
+
             case REQUEST_LEDGER:
                     sendLedger();
                 break;

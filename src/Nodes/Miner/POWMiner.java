@@ -1,12 +1,25 @@
 package Nodes.Miner;
 
+import DataStructures.Ledger.Ledger;
 import Nodes.Consensus.Consensus;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 
+import static network.events.Events.REQUEST_PUBLICKEYS;
+
 public class POWMiner extends Miner{
     public POWMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants) {
         super(blockConsumer, blockSize, address, port, leader, numOfParticipants);
+        initializeSubscriptions();
+        if(leader)
+            ledger = new Ledger();
+        initializeBlockConsumerService();
+        initializeBlockProducerService();
+        initializeBlockAdderToLedgerService();
+        if(leader){
+            request(REQUEST_PUBLICKEYS);
+        }
+        sendPublickey();
     }
 
 

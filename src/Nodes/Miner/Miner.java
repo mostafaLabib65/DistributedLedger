@@ -32,11 +32,11 @@ public abstract class Miner implements Subscription.Subscriber{
     protected BlockAdder blockAdder;
     protected Ledger ledger;
     protected Process process;
-    private int blockSize;
+    protected int blockSize;
     protected String address;
     protected int port;
     protected boolean leader;
-    private RSA rsa = new RSA(2048);
+    protected RSA rsa = new RSA(2048);
     private BigInteger publicKey = rsa.getPublicKey();
     private BigInteger modulus = rsa.getModulus();
     private HashMap<String, Integer> transactionHashToIndex = new HashMap<>();
@@ -49,7 +49,7 @@ public abstract class Miner implements Subscription.Subscriber{
     protected int numOfParticipants;
     protected ArrayList<Block> addBlocksToLedgerQueue = new ArrayList<>();
     private int transactionCounter = 0;
-    private ReentrantLock readyToMineBlocksQueueLock = new ReentrantLock();
+    protected ReentrantLock readyToMineBlocksQueueLock = new ReentrantLock();
     public Miner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants){
         this.address = address;
         this.port = port;
@@ -58,26 +58,17 @@ public abstract class Miner implements Subscription.Subscriber{
         this.leader = leader;
         this.numOfParticipants = numOfParticipants;
         initializeNetwork();
-        initializeSubscriptions();
-        if(leader)
-            ledger = new Ledger();
-        initializeBlockConsumerService();
-        initializeBlockProducerService();
-        initializeBlockAdderToLedgerService();
-        if(leader){
-            request(REQUEST_PUBLICKEYS);
-        }
-        sendPublickey();
+
     }
 
-    private void initializeBlockAdderToLedgerService(){
+    protected void initializeBlockAdderToLedgerService(){
         System.out.println("Init Block Adder Service");
         this.blockAdder = new BlockAdder(this.addBlocksToLedgerQueue, this.blockConsumer, this.blockProducer, this.ledger, this.process);
         this.blockAdderThread = new Thread(this.blockAdder);
         this.blockAdderThread.start();
     }
 
-    private void initializeBlockProducerService(){
+    protected void initializeBlockProducerService(){
         this.blockProducer = new BlockProducer(this.readyToMineBlocks, this.transactions, this.blockSize,
                 rsa, leader, this.blockConsumerThread, this.hashedPublicKeys,
                 this.numOfParticipants, this.ledger, this.process, this.readyToMineBlocksQueueLock);
@@ -86,13 +77,13 @@ public abstract class Miner implements Subscription.Subscriber{
         System.out.println("Init Block Producer Service");
     }
 
-    private void initializeBlockConsumerService(){
+    protected void initializeBlockConsumerService(){
         System.out.println("Init Block Consumer Service");
         this.blockConsumer.setParams(this.readyToMineBlocks, this.process, this.ledger, this.transactions, this.readyToMineBlocksQueueLock);
         this.blockConsumerThread = new Thread(this.blockConsumer);
         blockConsumerThread.start();
     }
-    private void initializeSubscriptions(){
+    protected void initializeSubscriptions(){
         System.out.println("Init Subscriptions");
         Subscription.getSubscription().subscribe(Events.TRANSACTION, this);
         Subscription.getSubscription().subscribe(REQUEST_LEDGER, this);
@@ -134,7 +125,7 @@ public abstract class Miner implements Subscription.Subscriber{
         cu.setEvent(ADDRESS);
         process.invokeClientEvent(cu);
     }
-    private void request(Events event) {
+    protected void request(Events event) {
         CommunicationUnit cu = new CommunicationUnit();
         cu.setEvent(event);
         process.invokeClientEvent(cu);

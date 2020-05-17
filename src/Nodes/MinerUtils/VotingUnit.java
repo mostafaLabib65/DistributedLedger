@@ -16,6 +16,7 @@ public class VotingUnit {
     }
 
     public Configs addVote(boolean vote){
+        System.out.println("Voting unite: " + vote);
         if(vote){
             posVotes++;
         }else {
@@ -23,7 +24,7 @@ public class VotingUnit {
         }
         if(posVotes > population/2){
             return ACCEPTED;
-        }else if(negVotes > population/2){
+        }else if(negVotes >= population/2){
             return REJECTED;
         }else {
             return NOT_SETTELED;

@@ -48,6 +48,6 @@ public class Ledger implements Serializable {
 
 
     public boolean isValidBlockForLedger(Block b) throws NoSuchAlgorithmException {
-        return this.baseLedger.isValidBlockForLedger(b);
+        return this.partitionTree.isValidBlockForLedger(b);
     }
 }

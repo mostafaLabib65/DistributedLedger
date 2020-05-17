@@ -1,11 +1,15 @@
 package Nodes.MinerUtils;
 
 import DataStructures.Block.Block;
+import Nodes.Miner.BFTMiner;
 import network.Process;
 import network.entities.CommunicationUnit;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
+
+import static network.events.Events.BFT_REQUEST_VOTE;
 
 public class VotingSystemLeader implements Runnable  {
 
@@ -16,10 +20,13 @@ public class VotingSystemLeader implements Runnable  {
     private Process process;
     private boolean waitingForResult = false;
     private Block b;
-    public VotingSystemLeader(ArrayList<Block> readyForVotingBlocks, Process process, CommunicationUnit cu){
+    private BFTMiner miner;
+    public VotingSystemLeader(ArrayList<Block> readyForVotingBlocks, Process process, BFTMiner miner){
         this.readyForVotingBlocks = readyForVotingBlocks;
-        this.cu = cu;
+        this.cu = new CommunicationUnit();
+        this.cu.setEvent(BFT_REQUEST_VOTE);
         this.process = process;
+        this.miner = miner;
     }
 
 
@@ -36,7 +43,6 @@ public class VotingSystemLeader implements Runnable  {
                         wait();
                     } catch (InterruptedException e) {
                         System.out.println("Voting System: Block received");
-                        e.printStackTrace();
                     }
                 }
                 if(!waitingForResult){
@@ -45,20 +51,24 @@ public class VotingSystemLeader implements Runnable  {
                     cu.setBlock(b);
                     process.invokeClientEvent(cu);
                     waitingForResult = true;
+                    miner.request_vote(b);
                 }
                 try {
                     System.out.println("Voting System: Waiting for a Voting result");
                     wait();
                 } catch (InterruptedException e) {
-                    try {
-                        if(b.getHash() == receivedBlock.getHash()){
-                            System.out.println("Voting System: Voting finished");
-                            waitingForResult = false;
-                        }else {
-                            System.out.println("Voting System: Vote received but not settled yet");
+                    if(receivedBlock != null){
+                        try {
+                            if(Arrays.equals(b.getHash(), receivedBlock.getHash())){
+                                System.out.println("Voting System: Voting finished");
+                                waitingForResult = false;
+                            }else {
+                                System.out.println("Voting System: Vote received but not settled yet");
+                            }
+                            receivedBlock = null;
+                        } catch (NoSuchAlgorithmException ex) {
+                            ex.printStackTrace();
                         }
-                    } catch (NoSuchAlgorithmException ex) {
-                        ex.printStackTrace();
                     }
                 }
             }

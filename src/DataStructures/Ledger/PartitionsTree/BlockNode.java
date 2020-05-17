@@ -5,6 +5,7 @@ import DataStructures.Ledger.UTXOSet;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.io.Serializable;
 
@@ -91,7 +92,7 @@ public class BlockNode implements Serializable {
 
     public boolean equals(BlockNode node) {
         try {
-            return this.block.getMerkleTreeRoot().equals(node.getBlock().getMerkleTreeRoot());
+            return Arrays.equals(this.block.getHash(), node.getBlock().getHash());
         } catch (Exception e) {
             return false;
         }

@@ -12,7 +12,7 @@ public class BlockFactory {
 
     public Block createGenesisBlock(List<String> publicKeyHashes) throws NoSuchAlgorithmException {
 
-        long amount = 1000000000L;
+        long amount = 100000000L;
         Block genesisBlock = new Block(publicKeyHashes.size());
         ArrayList<Transaction> transactions = new ArrayList<>();
 

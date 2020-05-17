@@ -19,9 +19,14 @@ public class BlockAdder implements Runnable{
     private BlockProducer blockProducer;
     private Ledger ledger;
     private Process process;
-    public boolean waitingForLedger;
+    public boolean waitingForLedger = false;
     private Block block;
-    public BlockAdder(ArrayList<Block> addBlocksToLedgerQueue, Consensus blockConsumer, BlockProducer blockProducer, Ledger ledger, Process process){
+    private VotingUnit votingUnit;
+    private Thread blockConsumerThread;
+    private boolean waitingForElection = false;
+    private int numOfTries = 0;
+    public BlockAdder(ArrayList<Block> addBlocksToLedgerQueue, Consensus blockConsumer,
+                      BlockProducer blockProducer, Ledger ledger, Process process){
         this.addBlocksToLedgerQueue = addBlocksToLedgerQueue;
         this.blockConsumer = blockConsumer;
         this.blockProducer = blockProducer;
@@ -29,11 +34,26 @@ public class BlockAdder implements Runnable{
         this.process = process;
     }
 
-
-    public void setLedger(Ledger ledger){
+    public BlockAdder(ArrayList<Block> addBlocksToLedgerQueue, Consensus blockConsumer,
+                      BlockProducer blockProducer, Ledger ledger, Process process, Thread blockConsumerThread){
+        this.addBlocksToLedgerQueue = addBlocksToLedgerQueue;
+        this.blockConsumer = blockConsumer;
+        this.blockProducer = blockProducer;
         this.ledger = ledger;
+        this.process = process;
+        this.blockConsumerThread = blockConsumerThread;
     }
 
+    public void setWaitingForElection(){
+        this.waitingForElection = true;
+    }
+    public void setLedger(Ledger ledger){
+        numOfTries++;
+        this.ledger = ledger;
+    }
+    public void setVotingUnit(VotingUnit votingUnit){
+        this.votingUnit = votingUnit;
+    }
     private void addBlockToLedger(Block block){
         try {
             boolean success = this.ledger.addBlock(block);
@@ -41,20 +61,23 @@ public class BlockAdder implements Runnable{
                 this.blockConsumer.StopMiningCurrentBlock(block);
                 this.blockProducer.setInterrupt(block);
                 System.out.println("Block Adder.............................." + currentTimeMillis() + " Ledger length: " + ledger.getLedgerDepth());
-            }else {
+            }else if(numOfTries != 3){
                 CommunicationUnit cu = new CommunicationUnit();
                 cu.setEvent(Events.REQUEST_LEDGER);
                 process.invokeClientEvent(cu);
                 System.out.println("Block Adder: Waiting for new ledger");
                 waitingForLedger = true;
                 wait();
+            }else {
+                waitingForLedger = false;
+                numOfTries = 1;
             }
         }catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             System.out.println("Block Adder: New Ledger received- try to add block");
         } catch (Exception e) {
-            System.out.println(e.getMessage());;
+            System.out.println(e.getMessage());
         }
     }
     @Override
@@ -62,7 +85,7 @@ public class BlockAdder implements Runnable{
         Block block = null;
         while (true){
             synchronized (this){
-                if(addBlocksToLedgerQueue.size() == 0) {
+                if(addBlocksToLedgerQueue.size() == 0 && !waitingForLedger) {
                     try {
                         System.out.println("BlockAdderThread: Waiting for blocks");
 
