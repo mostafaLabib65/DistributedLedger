@@ -2,7 +2,9 @@ package network.runnables;
 
 import network.entities.CommunicationUnit;
 import network.entities.Configs;
+import network.events.Events;
 import network.mq.MQ;
+import network.utils.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -40,6 +42,11 @@ public class ServerRunnable implements Runnable{
                     cu.setSocketPort(getCleanPort(remoteAddress));
 
                     serverProcessMQ.putMessage(cu);
+
+                    if(cu.getEvent() == Events.BLOCK || cu.getEvent() == Events.RECEIVE_LEDGER || cu.getEvent() == Events.REQUEST_LEDGER){
+                        Logger.putLine("1");
+                    }
+
                 } catch (IOException | InterruptedException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
