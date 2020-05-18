@@ -13,6 +13,7 @@ import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 import network.state.Subscription;
+import network.utils.ConnectionInitializer;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -49,14 +50,16 @@ public abstract class Miner implements Subscription.Subscriber{
     protected int numOfParticipants;
     protected ArrayList<Block> addBlocksToLedgerQueue = new ArrayList<>();
     private int transactionCounter = 0;
+    private String globalAddress;
     protected ReentrantLock readyToMineBlocksQueueLock = new ReentrantLock();
-    public Miner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants){
+    public Miner(Consensus blockConsumer, int blockSize, String address, String globalAddress, int port, boolean leader, int numOfParticipants){
         this.address = address;
         this.port = port;
         this.blockConsumer = blockConsumer;
         this.blockSize = blockSize;
         this.leader = leader;
         this.numOfParticipants = numOfParticipants;
+        this.globalAddress = globalAddress;
         initializeNetwork();
 
     }
@@ -97,13 +100,12 @@ public abstract class Miner implements Subscription.Subscriber{
     private void initializeNetwork() {
         System.out.println("Init the network");
         try {
-            String globalAddress = "192.168.1.10";
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress, globalAddress);
             process.start();
 
-//            ConnectionInitializer ci = new ConnectionInitializer(process);
-//            ci.init();
+            ConnectionInitializer ci = new ConnectionInitializer(process);
+            ci.init();
 
             startConnecting(4000);
             startConnecting(4001);

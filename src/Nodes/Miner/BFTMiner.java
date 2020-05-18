@@ -19,8 +19,8 @@ public class BFTMiner extends Miner{
     private ArrayList<Block> votingBlocksQueue = new ArrayList<>();
     private VotingUnit votingUnit;
 
-    public BFTMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants) {
-        super(blockConsumer, blockSize, address, port, leader, numOfParticipants);
+    public BFTMiner(Consensus blockConsumer, int blockSize, String address, String globalAddress, int port, boolean leader, int numOfParticipants) {
+        super(blockConsumer, blockSize, address, globalAddress, port, leader, numOfParticipants);
         initializeSubscriptions();
         if(leader){
             initializeBlockVotingSystem();

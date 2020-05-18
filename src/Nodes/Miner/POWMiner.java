@@ -8,8 +8,8 @@ import network.events.Events;
 import static network.events.Events.REQUEST_PUBLICKEYS;
 
 public class POWMiner extends Miner{
-    public POWMiner(Consensus blockConsumer, int blockSize, String address, int port, boolean leader, int numOfParticipants) {
-        super(blockConsumer, blockSize, address, port, leader, numOfParticipants);
+    public POWMiner(Consensus blockConsumer, int blockSize, String address, String globalAddress, int port, boolean leader, int numOfParticipants) {
+        super(blockConsumer, blockSize, address, globalAddress, port, leader, numOfParticipants);
         initializeSubscriptions();
         if(leader)
             ledger = new Ledger();

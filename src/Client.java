@@ -14,6 +14,7 @@ import network.Process;
 import network.entities.CommunicationUnit;
 import network.events.Events;
 import network.state.Subscription;
+import network.utils.ConnectionInitializer;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -47,7 +48,10 @@ public class Client implements Subscription.Subscriber {
     private int transactionCounter = 0;
     private VotingUnit votingUnit;
     private int numOfParticipants;
-    public Client(int port, int numOfParticipants) {
+    private String address;
+    private String globalAddress;
+
+    public Client(int port, int numOfParticipants, String address, String globalAddress) {
         this.port = port;
         this.numOfParticipants = numOfParticipants;
         Subscription.getSubscription().subscribe(Events.BLOCK, this);
@@ -64,8 +68,10 @@ public class Client implements Subscription.Subscriber {
         sendTransactions();
     }
 
-    public Client(int port) {
+    public Client(int port, String address, String globalAddress) {
         this.port = port;
+        this.address = address;
+        this.globalAddress = globalAddress;
         Subscription.getSubscription().subscribe(Events.BLOCK, this);
         Subscription.getSubscription().subscribe(Events.REQUEST_LEDGER, this);
         Subscription.getSubscription().subscribe(Events.RECEIVE_LEDGER, this);
@@ -212,14 +218,12 @@ public class Client implements Subscription.Subscriber {
         rand = new Random(System.currentTimeMillis());
 
         try {
-            String address = "127.0.0.1";
-            String globalAddress = "127.0.0.1";
             InetAddress inetAddress = InetAddress.getByName(address);
             process = new Process(port, inetAddress, globalAddress);
             process.start();
 
-//            ConnectionInitializer ci = new ConnectionInitializer(process);
-//            ci.init();
+            ConnectionInitializer ci = new ConnectionInitializer(process);
+            ci.init();
 
             createKeys();
             sendPublickey();
