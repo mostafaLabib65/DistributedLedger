@@ -1,10 +1,10 @@
 package network.runnables;
 
+import Nodes.MinerUtils.Logger;
 import network.entities.CommunicationUnit;
 import network.entities.Configs;
 import network.events.Events;
 import network.mq.MQ;
-import network.utils.Logger;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -18,11 +18,17 @@ public class ServerRunnable implements Runnable{
     private int port;
     private InetAddress address;
     private MQ serverProcessMQ;
+    private Logger logger;
 
     public ServerRunnable(int port, InetAddress address, MQ serverProcessMQ){
         this.port = port;
         this.address = address;
         this.serverProcessMQ = serverProcessMQ;
+        try {
+            this.logger = new Logger("Blocks Server Runnable");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -44,7 +50,7 @@ public class ServerRunnable implements Runnable{
                     serverProcessMQ.putMessage(cu);
 
                     if(cu.getEvent() == Events.BLOCK || cu.getEvent() == Events.RECEIVE_LEDGER || cu.getEvent() == Events.REQUEST_LEDGER){
-                        Logger.putLine(Configs.indicator + "1");
+                        logger.log_block_num(Configs.indicator + "1");
                     }
 
                 } catch (IOException | InterruptedException | ClassNotFoundException e) {
