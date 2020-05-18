@@ -25,16 +25,21 @@ public class ConnectionInitializer {
 
     public void init(){
         try {
-            List<String> lines = getLines();
+            List<String> lines = getLines(Configs.PEERS_FILE_PATH);
             List<Pair<String, Integer>> peers = getPeers(lines);
-            initiateConnections(peers);
+            initiateConnections(peers, false);
+
+            lines = getLines(Configs.LOCAL_PEERS_FILE_PATH);
+            peers = getPeers(lines);
+            initiateConnections(peers, true);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private List<String> getLines() throws IOException {
-        File file = new FileLoader().getFile(Configs.PEERS_FILE_PATH);
+    private List<String> getLines(String name) throws IOException {
+        File file = new FileLoader().getFile(name);
         BufferedReader br = new BufferedReader(new FileReader(file));
         List<String> lines = new ArrayList<>();
         String line;
@@ -56,14 +61,20 @@ public class ConnectionInitializer {
         return peers;
     }
 
-    private void initiateConnections(List<Pair<String, Integer>> peers) {
+    private void initiateConnections(List<Pair<String, Integer>> peers, boolean isLocal) {
         peers.forEach(p -> {
             CommunicationUnit cu = new CommunicationUnit();
             cu.setEvent(Events.ADDRESS);
             cu.setSocketAddress(p.getKey());
             cu.setSocketPort(p.getValue());
-            cu.setServerAddress(process.getAddress());
-            cu.setServerPort(process.getPort());
+            String tempA = process.getAddress();
+            int tempP = process.getPort();
+            if(isLocal){
+                tempA = p.getKey();
+                tempP = p.getValue();
+            }
+            cu.setServerAddress(tempA);
+            cu.setServerPort(tempP);
             process.invokeClientEvent(cu);
         });
     }
