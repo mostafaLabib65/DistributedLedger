@@ -44,7 +44,7 @@ public class ServerRunnable implements Runnable{
                     serverProcessMQ.putMessage(cu);
 
                     if(cu.getEvent() == Events.BLOCK || cu.getEvent() == Events.RECEIVE_LEDGER || cu.getEvent() == Events.REQUEST_LEDGER){
-                        Logger.putLine("1");
+                        Logger.putLine(Configs.indicator + "1");
                     }
 
                 } catch (IOException | InterruptedException | ClassNotFoundException e) {
