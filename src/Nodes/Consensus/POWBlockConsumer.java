@@ -3,9 +3,11 @@ package Nodes.Consensus;
 import DataStructures.Block.Block;
 import DataStructures.Ledger.Ledger;
 import DataStructures.Transaction.Transaction;
+import Nodes.MinerUtils.Logger;
 import network.Process;
 import network.entities.CommunicationUnit;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -19,9 +21,7 @@ public class POWBlockConsumer extends Consensus {
     private ArrayList<Block> blocks;
     private CommunicationUnit cu = new CommunicationUnit();
     private Process process;
-    public POWBlockConsumer(int difficulty){
-        this.difficulty = difficulty;
-    }
+
     private boolean interrupt;
     private Ledger ledger;
     private Block receivedBlock;
@@ -31,6 +31,16 @@ public class POWBlockConsumer extends Consensus {
     private boolean waitingForBlocks = true;
     private ArrayList<Transaction> allTransactions;
     private ReentrantLock readyToMineBlocksQueueLock;
+    private Logger logger;
+
+    public POWBlockConsumer(int difficulty){
+        try {
+            this.logger = new Logger();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.difficulty = difficulty;
+    }
     public void setParams(ArrayList<Block> blocks, Process process, Ledger ledger, ArrayList<Transaction> transactions,
                           ReentrantLock readyToMineBlocksQueueLock){
         this.blocks = blocks;
@@ -83,6 +93,7 @@ public class POWBlockConsumer extends Consensus {
 
     private void startMining(){
         System.out.println("POW Consumer: Start Mining....");
+        long startTime = System.nanoTime();
         try {
             do{
                 currentMiningBlock.getHeader().nonce = nonce;
@@ -91,6 +102,16 @@ public class POWBlockConsumer extends Consensus {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+        long endTime = System.nanoTime();
+        float durationInMs = (float)(endTime - startTime)/(float)1000000;
+        try {
+            logger.log_block_time(durationInMs);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void checkForDuplicateTransactions(){
