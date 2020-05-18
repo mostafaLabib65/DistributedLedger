@@ -196,7 +196,7 @@ public class Client implements Subscription.Subscriber {
 
     private List<UTXOEntry> getNumberOfUTXOChosen() {
 
-        int bound = rand.nextInt(10) + 5;
+        int bound = 2;
 
         List<UTXOEntry> chosenEntries = new ArrayList<>();
 

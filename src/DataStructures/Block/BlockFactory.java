@@ -18,7 +18,7 @@ public class BlockFactory {
 
         TransactionFactory factory = new TransactionFactory();
         for (String publicKeyHash : publicKeyHashes) {
-            for(int i = 0; i < 1000; i++){
+            for(int i = 0; i < 5000; i++){
                 Transaction t = factory.createSpecialTransactionForPublicKey(
                         BytesConverter.hexStringToByteArray(publicKeyHash), amount - i);
                 transactions.add(t);
