@@ -38,6 +38,7 @@ public class POWMiner extends Miner{
                     this.blockConsumer.setLedger(ledger);
                     this.blockAdder.setLedger(ledger);
                     this.blockAdderThread.interrupt();
+                    this.blockConsumerThread.interrupt();
                 }
                 break;
             case BLOCK:

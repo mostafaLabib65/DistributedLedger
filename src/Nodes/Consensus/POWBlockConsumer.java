@@ -142,40 +142,48 @@ public class POWBlockConsumer extends Consensus {
     public void run() {
         while (true){
             synchronized (this){
-                readyToMineBlocksQueueLock.lock();
-                int size = blocks.size();
-                readyToMineBlocksQueueLock.unlock();
-                if(size == 0 ){
-                    waitForBlocks();
-                }
-                readyToMineBlocksQueueLock.lock();
-                size = blocks.size();
-                readyToMineBlocksQueueLock.unlock();
-                if(size != 0){
-                    getNewBlock();
-                }
-                this.interrupt = false;
-                this.blockCorrupted = false;
-                startMining();
-                if(interrupt){
-                    checkForDuplicateTransactions();
-                }else {
-                    boolean success = false;
+                if(ledger == null){
                     try {
-                        success = this.ledger.addBlock(currentMiningBlock);
-                    } catch (NoSuchAlgorithmException e) {
+                        wait();
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
-                    } catch (Exception e) {
-                        System.out.println("POW Consumer: 148" + e.getMessage());
                     }
-                    if(success){
-                        System.out.println("POW Consumer: block added to ledger, start publishing it...");
-                        cu.setBlock(currentMiningBlock);
-                        this.process.invokeClientEvent(cu);
-                        System.out.println("POW Consumer.............................." + currentTimeMillis() + " Ledger length: " + ledger.getLedgerDepth());
+                }else {
+                    readyToMineBlocksQueueLock.lock();
+                    int size = blocks.size();
+                    readyToMineBlocksQueueLock.unlock();
+                    if(size == 0 ){
+                        waitForBlocks();
+                    }
+                    readyToMineBlocksQueueLock.lock();
+                    size = blocks.size();
+                    readyToMineBlocksQueueLock.unlock();
+                    if(size != 0){
+                        getNewBlock();
+                    }
+                    this.interrupt = false;
+                    this.blockCorrupted = false;
+                    startMining();
+                    if(interrupt){
+                        checkForDuplicateTransactions();
                     }else {
-                        System.out.println("POW Consumer: Failed to add block to ledger...");
+                        boolean success = false;
+                        try {
+                            success = this.ledger.addBlock(currentMiningBlock);
+                        } catch (NoSuchAlgorithmException e) {
+                            e.printStackTrace();
+                        } catch (Exception e) {
+                            System.out.println("POW Consumer: 148" + e.getMessage());
+                        }
+                        if(success){
+                            System.out.println("POW Consumer: block added to ledger, start publishing it...");
+                            cu.setBlock(currentMiningBlock);
+                            this.process.invokeClientEvent(cu);
+                            System.out.println("POW Consumer.............................." + currentTimeMillis() + " Ledger length: " + ledger.getLedgerDepth());
+                        }else {
+                            System.out.println("POW Consumer: Failed to add block to ledger...");
 
+                        }
                     }
                 }
 
