@@ -13,19 +13,22 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Broadcaster {
     private static ReentrantLock broadcastLock = new ReentrantLock();
 
-    public static void broadcast(CommunicationUnit cu){
+    public synchronized static void broadcast(CommunicationUnit cu){
 //        broadcastLock.lock();
         Set<Map.Entry<String, Integer>> clientSockets = ActiveClients.getActiveClients().getAllActiveClients();
         for (Map.Entry<String, Integer> clientSocket : clientSockets) {
-            try {
-                Socket socket = new Socket(clientSocket.getKey().split(":")[0], clientSocket.getValue());
-                ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-                outputStream.writeObject(cu);
-                socket.close();
-                outputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            new Thread(() -> {
+                try {
+                    Socket socket = new Socket(clientSocket.getKey().split(":")[0], clientSocket.getValue());
+                    ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+                    outputStream.writeObject(cu);
+                    socket.close();
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
         }
 //        broadcastLock.unlock();
     }
